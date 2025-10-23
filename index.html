@@ -1,1 +1,200 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory Sepeda</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#4CAF50">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>Inventory Sepeda</h1>
+            <div class="header-stats">
+                <div class="stat-card">
+                    <span class="stat-number" id="total-stok">0</span>
+                    <span class="stat-label">Total Stok</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number" id="belum-rakit">0</span>
+                    <span class="stat-label">Belum Rakit</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number" id="sudah-rakit">0</span>
+                    <span class="stat-label">Siap Jual</span>
+                </div>
+            </div>
+        </header>
 
+        <!-- Navigation -->
+        <nav class="nav-tabs">
+            <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
+            <button class="tab-btn" data-tab="input">Input Stok</button>
+            <button class="tab-btn" data-tab="perakitan">Perakitan</button>
+            <button class="tab-btn" data-tab="master">Master Data</button>
+        </nav>
+
+        <!-- Dashboard Tab -->
+        <div id="dashboard" class="tab-content active">
+            <div class="search-section">
+                <input type="text" id="search-input" placeholder="Cari sepeda...">
+                <select id="status-filter">
+                    <option value="">Semua Status</option>
+                    <option value="belum-rakit">Belum Dirakit</option>
+                    <option value="sudah-rakit">Sudah Dirakit</option>
+                    <option value="terjual">Terjual</option>
+                </select>
+            </div>
+            
+            <div class="notification-section">
+                <div id="notifications"></div>
+            </div>
+
+            <div class="stok-list" id="stok-list">
+                <!-- Daftar stok akan dimuat di sini -->
+            </div>
+        </div>
+
+        <!-- Input Stok Tab -->
+        <div id="input" class="tab-content">
+            <form id="form-input-stok" class="form">
+                <div class="form-group">
+                    <label>Tipe Sepeda</label>
+                    <select id="tipe" required>
+                        <option value="">Pilih Tipe</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Supplier</label>
+                    <select id="supplier" required>
+                        <option value="">Pilih Supplier</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Ukuran</label>
+                    <select id="ukuran" required>
+                        <option value="">Pilih Ukuran</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Warna (opsional)</label>
+                    <input type="text" id="warna" placeholder="Contoh: Merah, 2 unit">
+                </div>
+
+                <div class="form-group">
+                    <label>Jenis Kemasan</label>
+                    <select id="kemasan" required>
+                        <option value="">Pilih Kemasan</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Jumlah Unit per Kemasan</label>
+                    <input type="number" id="unit-per-kemasan" required min="1">
+                </div>
+
+                <div class="form-group">
+                    <label>Lokasi Penyimpanan</label>
+                    <select id="lokasi" required>
+                        <option value="">Pilih Lokasi</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Tanggal Datang</label>
+                    <input type="date" id="tanggal-datang">
+                    <small>Kosongkan jika tidak diketahui</small>
+                </div>
+
+                <button type="submit" class="btn-primary">Simpan Stok</button>
+            </form>
+        </div>
+
+        <!-- Perakitan Tab -->
+        <div id="perakitan" class="tab-content">
+            <div class="form">
+                <div class="form-group">
+                    <label>Pilih Stok Belum Dirakit</label>
+                    <select id="stok-belum-rakit">
+                        <option value="">Pilih Sepeda</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Pegawai yang Merakit</label>
+                    <select id="pegawai-rakit" required>
+                        <option value="">Pilih Pegawai</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Tanggal Perakitan</label>
+                    <input type="date" id="tanggal-rakit" required>
+                </div>
+
+                <button id="btn-proses-rakit" class="btn-primary">Proses Perakitan</button>
+            </div>
+
+            <div class="riwayat-perakitan">
+                <h3>Riwayat Perakitan</h3>
+                <div id="list-riwayat-perakitan"></div>
+            </div>
+        </div>
+
+        <!-- Master Data Tab -->
+        <div id="master" class="tab-content">
+            <div class="master-data-section">
+                <div class="master-item">
+                    <h4>Tipe Sepeda</h4>
+                    <div class="input-group">
+                        <input type="text" id="new-tipe" placeholder="Tipe baru">
+                        <button onclick="addMasterData('tipe')">Tambah</button>
+                    </div>
+                    <div id="list-tipe" class="master-list"></div>
+                </div>
+
+                <div class="master-item">
+                    <h4>Supplier</h4>
+                    <div class="input-group">
+                        <input type="text" id="new-supplier" placeholder="Supplier baru">
+                        <button onclick="addMasterData('supplier')">Tambah</button>
+                    </div>
+                    <div id="list-supplier" class="master-list"></div>
+                </div>
+
+                <div class="master-item">
+                    <h4>Pegawai</h4>
+                    <div class="input-group">
+                        <input type="text" id="new-pegawai" placeholder="Nama pegawai">
+                        <button onclick="addMasterData('pegawai')">Tambah</button>
+                    </div>
+                    <div id="list-pegawai" class="master-list"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal untuk QR Code -->
+    <div id="qr-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Label Stiker Sepeda</h3>
+            <div id="qr-label-container">
+                <!-- Template label akan dimuat di sini -->
+            </div>
+            <button id="btn-print-label" class="btn-primary">Print Label</button>
+        </div>
+    </div>
+
+    <script src="js/qrcode.js"></script>
+    <script src="js/database.js"></script>
+    <script src="js/print.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
