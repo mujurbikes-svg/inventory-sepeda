@@ -19,47 +19,66 @@ class Database {
             };
 
             request.onupgradeneeded = (event) => {
-                const db = event.target.result;
+    const db = event.target.result;
 
-                // Store untuk data sepeda
-                if (!db.objectStoreNames.contains('bikes')) {
-                    const bikeStore = db.createObjectStore('bikes', { 
-                        keyPath: 'id', 
-                        autoIncrement: true 
-                    });
-                    bikeStore.createIndex('status', 'status', { unique: false });
-                    bikeStore.createIndex('tipe', 'tipe', { unique: false });
-                    bikeStore.createIndex('supplier', 'supplier', { unique: false });
-                }
+    // Store untuk data sepeda
+    if (!db.objectStoreNames.contains('bikes')) {
+        const bikeStore = db.createObjectStore('bikes', { 
+            keyPath: 'id', 
+            autoIncrement: true 
+        });
+        bikeStore.createIndex('status', 'status', { unique: false });
+        bikeStore.createIndex('tipe', 'tipe', { unique: false });
+        bikeStore.createIndex('supplier', 'supplier', { unique: false });
+        bikeStore.createIndex('namaSepeda', 'namaSepeda', { unique: false });
+    }
 
-                // Store untuk master data
-                if (!db.objectStoreNames.contains('masters')) {
-                    const masterStore = db.createObjectStore('masters', { 
-                        keyPath: 'id', 
-                        autoIncrement: true 
-                    });
-                    masterStore.createIndex('type', 'type', { unique: false });
-                }
+    // Store untuk master data - TAMBAH SEMUA TYPE YANG DIBUTUHKAN
+    if (!db.objectStoreNames.contains('masters')) {
+        const masterStore = db.createObjectStore('masters', { 
+            keyPath: 'id', 
+            autoIncrement: true 
+        });
+        masterStore.createIndex('type', 'type', { unique: false });
+        
+        // Add default data untuk ukuran
+        const defaultSizes = ['16"', '18"', '20"', '24"', '26"', '27.5"', '29"'];
+        defaultSizes.forEach(size => {
+            masterStore.add({ type: 'ukuran', value: size });
+        });
+        
+        // Add default kemasan
+        const defaultKemasan = ['Karung', 'Kardus', 'Box', 'Plastik'];
+        defaultKemasan.forEach(kemasan => {
+            masterStore.add({ type: 'kemasan', value: kemasan });
+        });
+        
+        // Add default lokasi
+        const defaultLokasi = ['Rak A', 'Rak B', 'Gudang Belakang', 'Gudang Depan'];
+        defaultLokasi.forEach(lokasi => {
+            masterStore.add({ type: 'lokasi', value: lokasi });
+        });
+    }
 
-                // Store untuk riwayat perakitan
-                if (!db.objectStoreNames.contains('assembly')) {
-                    const assemblyStore = db.createObjectStore('assembly', { 
-                        keyPath: 'id', 
-                        autoIncrement: true 
-                    });
-                    assemblyStore.createIndex('bikeId', 'bikeId', { unique: false });
-                    assemblyStore.createIndex('pegawai', 'pegawai', { unique: false });
-                }
+    // Store untuk riwayat perakitan
+    if (!db.objectStoreNames.contains('assembly')) {
+        const assemblyStore = db.createObjectStore('assembly', { 
+            keyPath: 'id', 
+            autoIncrement: true 
+        });
+        assemblyStore.createIndex('bikeId', 'bikeId', { unique: false });
+        assemblyStore.createIndex('pegawai', 'pegawai', { unique: false });
+    }
 
-                // Store untuk penjualan
-                if (!db.objectStoreNames.contains('sales')) {
-                    const salesStore = db.createObjectStore('sales', { 
-                        keyPath: 'id', 
-                        autoIncrement: true 
-                    });
-                    salesStore.createIndex('bikeId', 'bikeId', { unique: false });
-                }
-            };
+    // Store untuk penjualan
+    if (!db.objectStoreNames.contains('sales')) {
+        const salesStore = db.createObjectStore('sales', { 
+            keyPath: 'id', 
+            autoIncrement: true 
+        });
+        salesStore.createIndex('bikeId', 'bikeId', { unique: false });
+    }
+};
         });
     }
 
