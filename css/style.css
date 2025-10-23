@@ -1,0 +1,444 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f5f5f5;
+    color: #333;
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 0;
+}
+
+/* Header */
+.header {
+    background: linear-gradient(135deg, #4CAF50, #45a049);
+    color: white;
+    padding: 1rem;
+    text-align: center;
+}
+
+.header h1 {
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+}
+
+.header-stats {
+    display: flex;
+    justify-content: space-around;
+    gap: 0.5rem;
+}
+
+.stat-card {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 0.5rem;
+    border-radius: 8px;
+    text-align: center;
+    flex: 1;
+}
+
+.stat-number {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.stat-label {
+    font-size: 0.8rem;
+    opacity: 0.9;
+}
+
+/* Navigation */
+.nav-tabs {
+    display: flex;
+    background: white;
+    border-bottom: 1px solid #ddd;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 1rem;
+    border: none;
+    background: white;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    font-size: 0.9rem;
+}
+
+.tab-btn.active {
+    border-bottom-color: #4CAF50;
+    color: #4CAF50;
+    font-weight: bold;
+}
+
+/* Tab Content */
+.tab-content {
+    display: none;
+    padding: 1rem;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* Forms */
+.form {
+    background: white;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+.btn-primary {
+    width: 100%;
+    padding: 1rem;
+    background: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+.btn-primary:hover {
+    background: #45a049;
+}
+
+/* Stok List */
+.stok-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.stok-item {
+    background: white;
+    padding: 1rem;
+    border-radius: 8px;
+    border-left: 4px solid #4CAF50;
+}
+
+.stok-item.belum-rakit {
+    border-left-color: #ff9800;
+}
+
+.stok-item.sudah-rakit {
+    border-left-color: #4CAF50;
+}
+
+.stok-item.terjual {
+    border-left-color: #9e9e9e;
+}
+
+.stok-item.lama {
+    background: #fff3cd;
+    border-left-color: #ffc107;
+}
+
+.stok-header {
+    display: flex;
+    justify-content: between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.stok-name {
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.stok-status {
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.status-belum-rakit {
+    background: #ffe0b2;
+    color: #e65100;
+}
+
+.status-sudah-rakit {
+    background: #c8e6c9;
+    color: #2e7d32;
+}
+
+.status-terjual {
+    background: #f5f5f5;
+    color: #616161;
+}
+
+.stok-details {
+    font-size: 0.9rem;
+    color: #666;
+    margin-bottom: 0.5rem;
+}
+
+.stok-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.btn-small {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+.btn-qr {
+    background: #2196F3;
+    color: white;
+}
+
+.btn-rakit {
+    background: #ff9800;
+    color: white;
+}
+
+.btn-jual {
+    background: #4CAF50;
+    color: white;
+}
+
+/* Search & Filter */
+.search-section {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.search-section input,
+.search-section select {
+    flex: 1;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+/* Notifications */
+.notification {
+    background: #ffecb3;
+    border: 1px solid #ffd54f;
+    padding: 0.75rem;
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.notification.warning {
+    background: #ffcdd2;
+    border-color: #f44336;
+    color: #c62828;
+}
+
+/* Master Data */
+.master-data-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.master-item {
+    background: white;
+    padding: 1rem;
+    border-radius: 8px;
+}
+
+.input-group {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.input-group input {
+    flex: 1;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.input-group button {
+    padding: 0.75rem 1rem;
+    background: #2196F3;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.master-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.master-tag {
+    background: #e3f2fd;
+    padding: 0.5rem 1rem;
+    border-radius: 16px;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.master-tag button {
+    background: none;
+    border: none;
+    color: #f44336;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+/* Modal */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+    background-color: white;
+    margin: 5% auto;
+    padding: 2rem;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 400px;
+    position: relative;
+}
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 1.5rem;
+    font-weight: bold;
+    cursor: pointer;
+    position: absolute;
+    right: 1rem;
+    top: 1rem;
+}
+
+.close:hover {
+    color: black;
+}
+
+/* QR Label Template untuk Thermal 58mm */
+.qr-label {
+    width: 58mm;
+    height: auto;
+    padding: 2mm;
+    border: 1px solid #ccc;
+    font-family: Arial, sans-serif;
+    background: white;
+}
+
+.qr-label-content {
+    display: flex;
+    align-items: center;
+    gap: 2mm;
+}
+
+.qr-code {
+    width: 25mm;
+    height: 25mm;
+}
+
+.label-info {
+    flex: 1;
+    font-size: 8px;
+    line-height: 1.2;
+}
+
+.label-info .name {
+    font-weight: bold;
+    font-size: 9px;
+    margin-bottom: 1mm;
+}
+
+.label-info .details {
+    margin-bottom: 1mm;
+}
+
+.label-info .supplier {
+    margin-bottom: 1mm;
+}
+
+.label-info .date {
+    color: #666;
+}
+
+/* Print Styles untuk Thermal Printer */
+@media print {
+    body * {
+        visibility: hidden;
+    }
+    .qr-label, .qr-label * {
+        visibility: visible;
+    }
+    .qr-label {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 58mm;
+        height: auto;
+        border: none;
+        margin: 0;
+        padding: 2mm;
+    }
+    .no-print {
+        display: none !important;
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .header-stats {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .stat-card {
+        padding: 0.75rem;
+    }
+    
+    .stok-actions {
+        flex-direction: column;
+    }
+}
