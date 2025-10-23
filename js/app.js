@@ -36,6 +36,16 @@ class InventoryApp {
             this.handleInputStok();
         });
 
+        // Tambah Stok button
+        document.getElementById('btn-tambah-stok').addEventListener('click', () => {
+            this.showFormInput();
+        });
+
+        // Batal button
+        document.getElementById('btn-batal-input').addEventListener('click', () => {
+            this.hideFormInput();
+        });
+
         // Perakitan button
         document.getElementById('btn-proses-rakit').addEventListener('click', () => {
             this.handlePerakitan();
@@ -50,8 +60,12 @@ class InventoryApp {
             this.filterStok(document.getElementById('search-input').value, e.target.value);
         });
 
-        // Modal close
+        // Modal events
         document.querySelector('.close').addEventListener('click', () => {
+            this.closeModal();
+        });
+
+        document.getElementById('btn-tutup-modal').addEventListener('click', () => {
             this.closeModal();
         });
 
@@ -77,10 +91,13 @@ class InventoryApp {
         
         // Load riwayat perakitan
         await this.loadRiwayatPerakitan();
+        
+        // Load data stok untuk tab stok
+        await this.loadDataStok();
     }
 
     async loadMasterData() {
-        const types = ['tipe', 'supplier', 'ukuran', 'kemasan', 'lokasi', 'pegawai'];
+        const types = ['nama-sepeda', 'tipe', 'supplier', 'ukuran', 'kemasan', 'lokasi', 'pegawai'];
         
         for (const type of types) {
             const data = await this.db.getMasterData(type);
@@ -136,33 +153,51 @@ class InventoryApp {
         }
     }
 
+    showFormInput() {
+        document.getElementById('form-input-container').style.display = 'block';
+        document.getElementById('btn-tambah-stok').style.display = 'none';
+    }
+
+    hideFormInput() {
+        document.getElementById('form-input-container').style.display = 'none';
+        document.getElementById('btn-tambah-stok').style.display = 'block';
+        document.getElementById('form-input-stok').reset();
+    }
+
     async handleInputStok() {
-        const formData = new FormData(document.getElementById('form-input-stok'));
-        const bikeData = {
-            tipe: formData.get('tipe'),
-            supplier: formData.get('supplier'),
-            ukuran: formData.get('ukuran'),
-            warna: formData.get('warna') || '',
-            kemasan: formData.get('kemasan'),
-            unitPerKemasan: parseInt(formData.get('unit-per-kemasan')),
-            lokasi: formData.get('lokasi'),
-            tanggalDatang: formData.get('tanggal-datang') || 'N/A'
+        const formData = {
+            namaSepeda: document.getElementById('nama-sepeda').value,
+            tipe: document.getElementById('tipe').value,
+            supplier: document.getElementById('supplier').value,
+            ukuran: document.getElementById('ukuran').value,
+            warna: document.getElementById('warna').value || '',
+            kemasan: document.getElementById('kemasan').value,
+            unitPerKemasan: parseInt(document.getElementById('unit-per-kemasan').value),
+            lokasi: document.getElementById('lokasi').value,
+            tanggalDatang: document.getElementById('tanggal-datang').value || 'N/A'
         };
 
+        // Validasi
+        if (!formData.namaSepeda || !formData.tipe || !formData.supplier || !formData.ukuran || 
+            !formData.kemasan || !formData.lokasi) {
+            alert('Harap lengkapi semua field yang wajib diisi!');
+            return;
+        }
+
         try {
-            const bikeId = await this.db.addBike(bikeData);
-            bikeData.id = bikeId;
+            const bikeId = await this.db.addBike(formData);
+            formData.id = bikeId;
             
             // Show QR modal
-            this.showQRModal(bikeData);
+            this.showQRModal(formData);
             
-            // Reset form
-            document.getElementById('form-input-stok').reset();
+            // Hide form
+            this.hideFormInput();
             
-            // Update dashboard
+            // Update semua data
             await this.updateDashboard();
-            
-            alert('Stok berhasil disimpan!');
+            await this.loadDataStok();
+            await this.loadStokForPerakitan();
             
         } catch (error) {
             console.error('Error saving bike:', error);
@@ -177,32 +212,36 @@ class InventoryApp {
         // Generate QR code data
         const qrData = JSON.stringify({
             id: bikeData.id,
+            nama: bikeData.namaSepeda,
             tipe: bikeData.tipe,
             supplier: bikeData.supplier,
             ukuran: bikeData.ukuran
         });
         
-        // Create QR code
-        const qrCode = new QRCode(document.createElement('div'), {
-            text: qrData,
-            width: 100,
-            height: 100
-        });
-        
-        // Build label template
+        // Clear previous QR code
         container.innerHTML = `
             <div class="qr-label">
                 <div class="qr-label-content">
-                    <div class="qr-code">${qrCode._el.innerHTML}</div>
+                    <div class="qr-code" id="qr-code-element"></div>
                     <div class="label-info">
-                        <div class="name">${bikeData.tipe}</div>
-                        <div class="details">${bikeData.ukuran} - ${bikeData.warna || 'Standard'}</div>
+                        <div class="name">${bikeData.namaSepeda}</div>
+                        <div class="details">${bikeData.tipe} - ${bikeData.ukuran}</div>
                         <div class="supplier">${bikeData.supplier}</div>
                         <div class="date">Datang: ${bikeData.tanggalDatang}</div>
                     </div>
                 </div>
             </div>
         `;
+        
+        // Generate QR code
+        const qrCode = new QRCode(document.getElementById('qr-code-element'), {
+            text: qrData,
+            width: 100,
+            height: 100,
+            colorDark: "#000000",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.H
+        });
         
         modal.style.display = 'block';
     }
@@ -237,11 +276,13 @@ class InventoryApp {
             // Reset form
             document.getElementById('pegawai-rakit').value = '';
             document.getElementById('tanggal-rakit').value = '';
+            document.getElementById('stok-belum-rakit').selectedIndex = 0;
             
             // Reload data
             await this.loadStokForPerakitan();
             await this.loadRiwayatPerakitan();
             await this.updateDashboard();
+            await this.loadDataStok();
             
             alert('Perakitan berhasil dicatat!');
             
@@ -264,7 +305,7 @@ class InventoryApp {
         stokBelumRakit.forEach(bike => {
             const option = document.createElement('option');
             option.value = bike.id;
-            option.textContent = `${bike.tipe} - ${bike.ukuran} - ${bike.lokasi} (${bike.warna || 'Standard'})`;
+            option.textContent = `${bike.namaSepeda} - ${bike.tipe} - ${bike.ukuran} - ${bike.lokasi}`;
             select.appendChild(option);
         });
     }
@@ -272,6 +313,11 @@ class InventoryApp {
     async loadRiwayatPerakitan() {
         const riwayat = await this.db.getAllAssemblyRecords();
         const container = document.getElementById('list-riwayat-perakitan');
+        
+        if (riwayat.length === 0) {
+            container.innerHTML = '<p style="text-align: center; color: #666;">Belum ada riwayat perakitan</p>';
+            return;
+        }
         
         // Get bike details for each assembly record
         const riwayatWithDetails = await Promise.all(
@@ -281,18 +327,63 @@ class InventoryApp {
             })
         );
         
+        // Sort by date descending
+        riwayatWithDetails.sort((a, b) => new Date(b.tanggalRakit) - new Date(a.tanggalRakit));
+        
         container.innerHTML = riwayatWithDetails.map(record => `
-            <div class="stok-item">
+            <div class="stok-item sudah-rakit">
                 <div class="stok-header">
-                    <div class="stok-name">${record.bike.tipe} - ${record.bike.ukuran}</div>
+                    <div class="stok-name">${record.bike.namaSepeda} - ${record.bike.tipe}</div>
+                    <span class="stok-status status-sudah-rakit">Siap Jual</span>
                 </div>
                 <div class="stok-details">
-                    <div>Pegawai: ${record.pegawai}</div>
-                    <div>Tanggal: ${new Date(record.tanggalRakit).toLocaleDateString('id-ID')}</div>
-                    <div>Lokasi: ${record.bike.lokasi}</div>
+                    <div class="detail-info">Ukuran: ${record.bike.ukuran} | Warna: ${record.bike.warna || 'Standard'}</div>
+                    <div class="detail-info">Pegawai: ${record.pegawai} | Tanggal: ${new Date(record.tanggalRakit).toLocaleDateString('id-ID')}</div>
+                    <div class="detail-info">Lokasi: ${record.bike.lokasi}</div>
                 </div>
             </div>
         `).join('');
+    }
+
+    async loadDataStok() {
+        const allBikes = await this.db.getAllBikes();
+        const container = document.getElementById('list-stok-terinput');
+        
+        if (allBikes.length === 0) {
+            container.innerHTML = '<p style="text-align: center; color: #666;">Belum ada data stok. Klik "Tambah Sepeda" untuk mulai.</p>';
+            return;
+        }
+        
+        // Sort by creation date descending
+        allBikes.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        
+        container.innerHTML = allBikes.map(bike => {
+            const isOld = this.isStokLama(bike);
+            const statusClass = this.getStatusClass(bike.status);
+            const statusText = this.getStatusText(bike.status);
+            
+            return `
+                <div class="stok-item ${bike.status} ${isOld ? 'lama' : ''}">
+                    <div class="stok-header">
+                        <div class="nama-sepeda">${bike.namaSepeda}</div>
+                        <span class="stok-status ${statusClass}">${statusText}</span>
+                    </div>
+                    <div class="stok-details">
+                        <div class="detail-info">${bike.tipe} - ${bike.ukuran} | ${bike.warna || 'Standard'}</div>
+                        <div class="detail-info">Supplier: ${bike.supplier} | Lokasi: ${bike.lokasi}</div>
+                        <div class="detail-info">Kemasan: ${bike.kemasan} | Unit: ${bike.unitPerKemasan} | Datang: ${bike.tanggalDatang}</div>
+                        ${isOld ? '<div style="color: #d32f2f; font-weight: bold;">⚠ Stok sudah lama (>3 bulan)</div>' : ''}
+                    </div>
+                    <div class="stok-actions">
+                        <button class="btn-small btn-qr" onclick="app.showBikeQR(${bike.id})">QR Code</button>
+                        ${bike.status === 'belum-rakit' ? 
+                            `<button class="btn-small btn-rakit" onclick="app.quickAssembly(${bike.id})">Quick Rakit</button>` : ''}
+                        ${bike.status === 'sudah-rakit' ? 
+                            `<button class="btn-small btn-jual" onclick="app.markAsSold(${bike.id})">Tandai Terjual</button>` : ''}
+                    </div>
+                </div>
+            `;
+        }).join('');
     }
 
     async updateDashboard() {
@@ -322,6 +413,7 @@ class InventoryApp {
         // Filter bikes
         let filteredBikes = bikes.filter(bike => {
             const matchesSearch = 
+                bike.namaSepeda.toLowerCase().includes(searchTerm) ||
                 bike.tipe.toLowerCase().includes(searchTerm) ||
                 bike.ukuran.toLowerCase().includes(searchTerm) ||
                 bike.supplier.toLowerCase().includes(searchTerm) ||
@@ -332,6 +424,11 @@ class InventoryApp {
             return matchesSearch && matchesStatus;
         });
         
+        if (filteredBikes.length === 0) {
+            container.innerHTML = '<p style="text-align: center; color: #666;">Tidak ada data yang sesuai dengan filter</p>';
+            return;
+        }
+        
         container.innerHTML = filteredBikes.map(bike => {
             const isOld = this.isStokLama(bike);
             const statusClass = this.getStatusClass(bike.status);
@@ -340,13 +437,13 @@ class InventoryApp {
             return `
                 <div class="stok-item ${bike.status} ${isOld ? 'lama' : ''}">
                     <div class="stok-header">
-                        <div class="stok-name">${bike.tipe} - ${bike.ukuran}</div>
+                        <div class="nama-sepeda">${bike.namaSepeda}</div>
                         <span class="stok-status ${statusClass}">${statusText}</span>
                     </div>
                     <div class="stok-details">
-                        <div>Supplier: ${bike.supplier} | Lokasi: ${bike.lokasi}</div>
-                        <div>Warna: ${bike.warna || 'Standard'} | Unit/Kemasan: ${bike.unitPerKemasan}</div>
-                        <div>Datang: ${bike.tanggalDatang} | Kemasan: ${bike.kemasan}</div>
+                        <div class="detail-info">${bike.tipe} - ${bike.ukuran} | ${bike.warna || 'Standard'}</div>
+                        <div class="detail-info">Supplier: ${bike.supplier} | Lokasi: ${bike.lokasi}</div>
+                        <div class="detail-info">Kemasan: ${bike.kemasan} | Unit: ${bike.unitPerKemasan} | Datang: ${bike.tanggalDatang}</div>
                         ${isOld ? '<div style="color: #d32f2f; font-weight: bold;">⚠ Stok sudah lama (>3 bulan)</div>' : ''}
                     </div>
                     <div class="stok-actions">
@@ -384,6 +481,7 @@ class InventoryApp {
             await this.updateDashboard();
             await this.loadStokForPerakitan();
             await this.loadRiwayatPerakitan();
+            await this.loadDataStok();
             
             alert('Perakitan cepat berhasil!');
         } catch (error) {
@@ -398,6 +496,7 @@ class InventoryApp {
                 await this.db.updateBikeStatus(bikeId, 'terjual');
                 await this.db.addSaleRecord(bikeId);
                 await this.updateDashboard();
+                await this.loadDataStok();
                 
                 alert('Sepeda ditandai sebagai terjual!');
             } catch (error) {
@@ -428,12 +527,12 @@ class InventoryApp {
             `);
         }
         
-        // Check for low stock (you can customize this logic)
+        // Check for low stock
         const lowStockTypes = this.checkLowStock(bikes);
         lowStockTypes.forEach(item => {
             notifications.push(`
                 <div class="notification">
-                    📦 Stok ${item.tipe} - ${item.ukuran} tinggal ${item.count} unit
+                    📦 Stok ${item.nama} - ${item.ukuran} tinggal ${item.count} unit
                 </div>
             `);
         });
@@ -452,13 +551,13 @@ class InventoryApp {
     }
 
     checkLowStock(bikes) {
-        // Group by type and size
+        // Group by nama and size
         const groups = {};
         bikes.forEach(bike => {
             if (bike.status === 'belum-rakit') {
-                const key = `${bike.tipe}-${bike.ukuran}`;
+                const key = `${bike.namaSepeda}-${bike.ukuran}`;
                 if (!groups[key]) {
-                    groups[key] = { tipe: bike.tipe, ukuran: bike.ukuran, count: 0 };
+                    groups[key] = { nama: bike.namaSepeda, ukuran: bike.ukuran, count: 0 };
                 }
                 groups[key].count += bike.unitPerKemasan;
             }
@@ -505,11 +604,15 @@ class InventoryApp {
         if (tabName === 'perakitan') {
             this.loadStokForPerakitan();
             this.loadRiwayatPerakitan();
+        } else if (tabName === 'stok') {
+            this.loadDataStok();
+        } else if (tabName === 'master') {
+            this.loadMasterData();
         }
     }
 }
 
-// QR Code library (simplified version)
+// QR Code library
 class QRCode {
     constructor(element, options) {
         this._el = element;
@@ -518,18 +621,22 @@ class QRCode {
     }
     
     generate() {
-        // Simple QR code representation (in real app, use proper QR library)
+        // Simple QR code representation
+        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${this._options.width}x${this._options.height}&data=${encodeURIComponent(this._options.text)}`;
+        
         this._el.innerHTML = `
-            <div style="width: ${this._options.width}px; height: ${this._options.height}px; 
-                       background: #f0f0f0; display: flex; align-items: center; justify-content: center;
-                       border: 1px solid #ccc;">
-                <div style="text-align: center; font-size: 8px;">
-                    QR CODE<br/>${this._options.text.substring(0, 20)}...
-                </div>
-            </div>
+            <img src="${qrUrl}" alt="QR Code" style="width: 100%; height: 100%;">
         `;
     }
 }
+
+// Static properties untuk QRCode
+QRCode.CorrectLevel = {
+    L: 1,
+    M: 0,
+    Q: 3,
+    H: 2
+};
 
 // Initialize app when DOM is loaded
 let app;
@@ -540,4 +647,4 @@ document.addEventListener('DOMContentLoaded', async () => {
 // Global functions untuk onclick events
 function addMasterData(type) {
     if (app) app.addMasterData(type);
-}
+    }
