@@ -32,7 +32,7 @@
         <!-- Navigation -->
         <nav class="nav-tabs">
             <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
-            <button class="tab-btn" data-tab="input">Input Stok</button>
+            <button class="tab-btn" data-tab="stok">Data Stok</button>
             <button class="tab-btn" data-tab="perakitan">Perakitan</button>
             <button class="tab-btn" data-tab="master">Master Data</button>
         </nav>
@@ -58,67 +58,95 @@
             </div>
         </div>
 
-        <!-- Input Stok Tab -->
-        <div id="input" class="tab-content">
-            <form id="form-input-stok" class="form">
-                <div class="form-group">
-                    <label>Tipe Sepeda</label>
-                    <select id="tipe" required>
-                        <option value="">Pilih Tipe</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label>Supplier</label>
-                    <select id="supplier" required>
-                        <option value="">Pilih Supplier</option>
-                    </select>
-                </div>
+        <!-- Data Stok Tab -->
+        <div id="stok" class="tab-content">
+            <div class="section-header">
+                <h3>Data Stok Sepeda</h3>
+                <button id="btn-tambah-stok" class="btn-primary">+ Tambah Sepeda</button>
+            </div>
 
-                <div class="form-group">
-                    <label>Ukuran</label>
-                    <select id="ukuran" required>
-                        <option value="">Pilih Ukuran</option>
-                    </select>
-                </div>
+            <!-- Form Input Stok (Awalnya tersembunyi) -->
+            <div id="form-input-container" class="form-container" style="display: none;">
+                <form id="form-input-stok" class="form">
+                    <h4>Input Stok Baru</h4>
+                    
+                    <div class="form-group">
+                        <label>Nama Sepeda*</label>
+                        <input type="text" id="nama-sepeda" required placeholder="Contoh: Polygon Premier, United Detroit, dll">
+                    </div>
 
-                <div class="form-group">
-                    <label>Warna (opsional)</label>
-                    <input type="text" id="warna" placeholder="Contoh: Merah, 2 unit">
-                </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Tipe Sepeda*</label>
+                            <select id="tipe" required>
+                                <option value="">Pilih Tipe</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Ukuran*</label>
+                            <select id="ukuran" required>
+                                <option value="">Pilih Ukuran</option>
+                            </select>
+                        </div>
+                    </div>
 
-                <div class="form-group">
-                    <label>Jenis Kemasan</label>
-                    <select id="kemasan" required>
-                        <option value="">Pilih Kemasan</option>
-                    </select>
-                </div>
+                    <div class="form-group">
+                        <label>Supplier*</label>
+                        <select id="supplier" required>
+                            <option value="">Pilih Supplier</option>
+                        </select>
+                    </div>
 
-                <div class="form-group">
-                    <label>Jumlah Unit per Kemasan</label>
-                    <input type="number" id="unit-per-kemasan" required min="1">
-                </div>
+                    <div class="form-group">
+                        <label>Warna (opsional)</label>
+                        <input type="text" id="warna" placeholder="Contoh: Merah, 2 unit">
+                    </div>
 
-                <div class="form-group">
-                    <label>Lokasi Penyimpanan</label>
-                    <select id="lokasi" required>
-                        <option value="">Pilih Lokasi</option>
-                    </select>
-                </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Jenis Kemasan*</label>
+                            <select id="kemasan" required>
+                                <option value="">Pilih Kemasan</option>
+                            </select>
+                        </div>
 
-                <div class="form-group">
-                    <label>Tanggal Datang</label>
-                    <input type="date" id="tanggal-datang">
-                    <small>Kosongkan jika tidak diketahui</small>
-                </div>
+                        <div class="form-group">
+                            <label>Jumlah Unit per Kemasan*</label>
+                            <input type="number" id="unit-per-kemasan" required min="1" value="1">
+                        </div>
+                    </div>
 
-                <button type="submit" class="btn-primary">Simpan Stok</button>
-            </form>
+                    <div class="form-group">
+                        <label>Lokasi Penyimpanan*</label>
+                        <select id="lokasi" required>
+                            <option value="">Pilih Lokasi</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Tanggal Datang</label>
+                        <input type="date" id="tanggal-datang">
+                        <small>Kosongkan jika tidak diketahui</small>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary">Simpan Stok & Generate QR</button>
+                        <button type="button" id="btn-batal-input" class="btn-secondary">Batal</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Daftar Stok yang sudah diinput -->
+            <div class="stok-list" id="list-stok-terinput">
+                <!-- Data stok akan dimuat di sini -->
+            </div>
         </div>
 
         <!-- Perakitan Tab -->
         <div id="perakitan" class="tab-content">
             <div class="form">
+                <h3>Proses Perakitan</h3>
                 <div class="form-group">
                     <label>Pilih Stok Belum Dirakit</label>
                     <select id="stok-belum-rakit">
@@ -151,6 +179,15 @@
         <div id="master" class="tab-content">
             <div class="master-data-section">
                 <div class="master-item">
+                    <h4>Nama Sepeda</h4>
+                    <div class="input-group">
+                        <input type="text" id="new-nama-sepeda" placeholder="Nama model sepeda">
+                        <button onclick="addMasterData('nama-sepeda')">Tambah</button>
+                    </div>
+                    <div id="list-nama-sepeda" class="master-list"></div>
+                </div>
+
+                <div class="master-item">
                     <h4>Tipe Sepeda</h4>
                     <div class="input-group">
                         <input type="text" id="new-tipe" placeholder="Tipe baru">
@@ -160,12 +197,39 @@
                 </div>
 
                 <div class="master-item">
+                    <h4>Ukuran</h4>
+                    <div class="input-group">
+                        <input type="text" id="new-ukuran" placeholder="Ukuran baru">
+                        <button onclick="addMasterData('ukuran')">Tambah</button>
+                    </div>
+                    <div id="list-ukuran" class="master-list"></div>
+                </div>
+
+                <div class="master-item">
                     <h4>Supplier</h4>
                     <div class="input-group">
                         <input type="text" id="new-supplier" placeholder="Supplier baru">
                         <button onclick="addMasterData('supplier')">Tambah</button>
                     </div>
                     <div id="list-supplier" class="master-list"></div>
+                </div>
+
+                <div class="master-item">
+                    <h4>Jenis Kemasan</h4>
+                    <div class="input-group">
+                        <input type="text" id="new-kemasan" placeholder="Jenis kemasan">
+                        <button onclick="addMasterData('kemasan')">Tambah</button>
+                    </div>
+                    <div id="list-kemasan" class="master-list"></div>
+                </div>
+
+                <div class="master-item">
+                    <h4>Lokasi Penyimpanan</h4>
+                    <div class="input-group">
+                        <input type="text" id="new-lokasi" placeholder="Lokasi baru">
+                        <button onclick="addMasterData('lokasi')">Tambah</button>
+                    </div>
+                    <div id="list-lokasi" class="master-list"></div>
                 </div>
 
                 <div class="master-item">
@@ -188,7 +252,10 @@
             <div id="qr-label-container">
                 <!-- Template label akan dimuat di sini -->
             </div>
-            <button id="btn-print-label" class="btn-primary">Print Label</button>
+            <div class="modal-actions">
+                <button id="btn-print-label" class="btn-primary">Print Label</button>
+                <button id="btn-tutup-modal" class="btn-secondary">Tutup</button>
+            </div>
         </div>
     </div>
 
