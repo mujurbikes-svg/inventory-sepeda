@@ -158,13 +158,25 @@
         }
         
         .qr-label-container {
-            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 10px;
             margin-top: 10px;
+        }
+        
+        .qr-code-small {
+            width: 33%;
+            flex-shrink: 0;
+        }
+        
+        .qr-info {
+            flex: 1;
+            text-align: left;
             font-size: 12px;
             line-height: 1.3;
         }
         
-        .qr-label-container strong {
+        .qr-info strong {
             display: block;
             margin-bottom: 5px;
             font-size: 14px;
@@ -194,17 +206,93 @@
             background: white;
         }
         
-        .printable-qr img {
-            width: 100%;
-            height: auto;
-        }
-        
         .package-unit-input {
             margin-top: 8px;
+        }
+        
+        .unit-count-badge {
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: bold;
+            position: absolute;
+            top: -8px;
+            right: -8px;
+        }
+        
+        .quick-scan-btn {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            z-index: 1001;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        
+        .search-box {
+            margin-bottom: 15px;
+        }
+        
+        .bike-card-content {
+            position: relative;
         }
     </style>
 </head>
 <body>
+    <!-- Quick Scan Button -->
+    <button class="quick-scan-btn" id="quick-scan-btn" title="Quick Scan QR">
+        <i class="fas fa-qrcode"></i>
+    </button>
+
+    <!-- Quick Scan Modal -->
+    <div class="modal fade" id="quickScanModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Quick Scan QR Code</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <p>Pilih metode scanning:</p>
+                        <button class="btn btn-primary w-100 mb-2" id="modal-camera-scan-btn">
+                            <i class="fas fa-camera me-1"></i> Gunakan Kamera
+                        </button>
+                        <button class="btn btn-secondary w-100" id="modal-upload-scan-btn">
+                            <i class="fas fa-upload me-1"></i> Upload Gambar QR
+                        </button>
+                        <input type="file" id="modal-file-input" accept="image/*">
+                    </div>
+                    
+                    <div id="modal-camera-container" style="display: none;">
+                        <video id="modal-camera-feed" autoplay playsinline></video>
+                        <div class="scan-overlay"></div>
+                        <button class="btn btn-danger w-100 mt-2" id="modal-stop-camera-btn">
+                            <i class="fas fa-stop me-1"></i> Hentikan Kamera
+                        </button>
+                    </div>
+                    
+                    <div id="modal-scan-result" class="mt-3 text-center"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Navbar -->
     <nav class="navbar navbar-dark">
         <div class="container-fluid">
@@ -236,25 +324,34 @@
                     <div class="card text-center bg-success text-white">
                         <div class="card-body py-3">
                             <h5 id="assembled-count">0</h5>
-                            <small>Ready Jual</small>
+                            <small>Sudah Rakit</small>
                         </div>
                     </div>
                 </div>
                 <div class="col-4">
                     <div class="card text-center bg-danger text-white">
                         <div class="card-body py-3">
-                            <h5 id="sold-count">0</h5>
-                            <small>Terjual</small>
+                            <h5 id="low-stock-count">0</h5>
+                            <small>Stok Tipis</small>
                         </div>
                     </div>
+                </div>
+            </div>
+            
+            <!-- Search Box -->
+            <div class="search-box">
+                <div class="input-group">
+                    <input type="text" class="form-control" id="search-input" placeholder="Cari sepeda...">
+                    <button class="btn btn-outline-secondary" type="button" id="clear-search">
+                        <i class="fas fa-times"></i>
+                    </button>
                 </div>
             </div>
             
             <div class="d-flex mb-3">
                 <button class="btn btn-outline-primary me-2 active filter-btn" data-status="all">Semua</button>
                 <button class="btn btn-outline-warning me-2 filter-btn" data-status="unassembled">Belum Rakit</button>
-                <button class="btn btn-outline-success me-2 filter-btn" data-status="assembled">Ready Jual</button>
-                <button class="btn btn-outline-danger filter-btn" data-status="sold">Terjual</button>
+                <button class="btn btn-outline-success me-2 filter-btn" data-status="assembled">Sudah Rakit</button>
             </div>
             
             <div id="bike-list">
@@ -359,17 +456,24 @@
                     
                     <div id="qr-code-container" class="qr-container" style="display: none;">
                         <div id="printable-qr" class="printable-qr">
-                            <div id="qrcode"></div>
                             <div class="qr-label-container">
-                                <strong id="qr-bike-name"></strong>
-                                <div id="qr-bike-type-size"></div>
-                                <div id="qr-bike-supplier"></div>
-                                <div id="qr-bike-arrival"></div>
+                                <div class="qr-code-small" id="qrcode"></div>
+                                <div class="qr-info">
+                                    <strong id="qr-bike-name"></strong>
+                                    <div id="qr-bike-type-size"></div>
+                                    <div id="qr-bike-supplier"></div>
+                                    <div id="qr-bike-arrival"></div>
+                                </div>
                             </div>
                         </div>
-                        <button class="btn btn-outline-primary mt-2" id="download-qr">
-                            <i class="fas fa-print me-1"></i> Print QR Label
-                        </button>
+                        <div class="d-flex gap-2 mt-2">
+                            <button class="btn btn-outline-primary flex-fill" id="print-qr">
+                                <i class="fas fa-print me-1"></i> Print Label
+                            </button>
+                            <button class="btn btn-outline-success flex-fill" id="download-qr">
+                                <i class="fas fa-download me-1"></i> Download
+                            </button>
+                        </div>
                     </div>
                 </div>
                 
@@ -527,6 +631,16 @@
                 
                 const status = $(this).data('status');
                 loadBikeList(status);
+            });
+            
+            // Search functionality
+            $('#search-input').on('input', function() {
+                loadBikeList();
+            });
+            
+            $('#clear-search').click(function() {
+                $('#search-input').val('');
+                loadBikeList();
             });
             
             // Add bike form submission
@@ -693,7 +807,7 @@
                         qr.addData(bikeId);
                         qr.make();
                         
-                        $('#qrcode').html(qr.createImgTag(4));
+                        $('#qrcode').html(qr.createImgTag(3));
                         $('#qr-bike-name').text(bike.name);
                         $('#qr-bike-type-size').text(`${bike.type} - ${bike.size}`);
                         $('#qr-bike-supplier').text(`Supplier: ${bike.supplier}`);
@@ -705,7 +819,7 @@
             });
             
             // Print QR Code
-            $('#download-qr').click(function() {
+            $('#print-qr').click(function() {
                 const printContent = document.getElementById('printable-qr').innerHTML;
                 const originalContent = document.body.innerHTML;
                 
@@ -717,16 +831,55 @@
                 location.reload();
             });
             
+            // Download QR Code
+            $('#download-qr').click(function() {
+                const img = document.querySelector('#qrcode img');
+                if (img) {
+                    const bikeName = $('#qr-bike-name').text();
+                    const link = document.createElement('a');
+                    link.download = `qr-${bikeName.replace(/\s+/g, '-')}.png`;
+                    link.href = img.src;
+                    link.click();
+                }
+            });
+            
             // QR Code Scanning
             let stream = null;
             let scanning = false;
             
-            // Camera scan
+            // Quick scan button
+            $('#quick-scan-btn').click(function() {
+                $('#quickScanModal').modal('show');
+            });
+            
+            // Modal camera scan
+            $('#modal-camera-scan-btn').click(function() {
+                startModalCameraScan();
+            });
+            
+            // Modal upload scan
+            $('#modal-upload-scan-btn').click(function() {
+                $('#modal-file-input').click();
+            });
+            
+            $('#modal-file-input').change(function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    scanQRFromImage(file, 'modal');
+                }
+            });
+            
+            // Modal stop camera
+            $('#modal-stop-camera-btn').click(function() {
+                stopModalCamera();
+            });
+            
+            // Regular camera scan
             $('#camera-scan-btn').click(function() {
                 startCameraScan();
             });
             
-            // Upload scan
+            // Regular upload scan
             $('#upload-scan-btn').click(function() {
                 $('#file-input').click();
             });
@@ -734,7 +887,7 @@
             $('#file-input').change(function(e) {
                 const file = e.target.files[0];
                 if (file) {
-                    scanQRFromImage(file);
+                    scanQRFromImage(file, 'regular');
                 }
             });
             
@@ -787,59 +940,85 @@
             $('#bike-list').empty();
             
             let filteredBikes = bikes;
+            const searchTerm = $('#search-input').val().toLowerCase();
+            
+            // Filter by status
             if (status !== 'all') {
-                filteredBikes = bikes.filter(bike => bike.status === status);
+                filteredBikes = filteredBikes.filter(bike => bike.status === status);
             }
             
-            if (filteredBikes.length === 0) {
+            // Filter by search term
+            if (searchTerm) {
+                filteredBikes = filteredBikes.filter(bike => 
+                    bike.name.toLowerCase().includes(searchTerm) ||
+                    bike.type.toLowerCase().includes(searchTerm) ||
+                    bike.size.toLowerCase().includes(searchTerm) ||
+                    bike.supplier.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            // Group bikes by model (name + type + size + supplier + package + status)
+            const bikeGroups = {};
+            filteredBikes.forEach(bike => {
+                const key = `${bike.name}-${bike.type}-${bike.size}-${bike.supplier}-${bike.package}-${bike.status}-${bike.arrivalDate}`;
+                if (!bikeGroups[key]) {
+                    bikeGroups[key] = {
+                        name: bike.name,
+                        type: bike.type,
+                        size: bike.size,
+                        supplier: bike.supplier,
+                        package: bike.package,
+                        status: bike.status,
+                        arrivalDate: bike.arrivalDate,
+                        unitsPerPackage: bike.unitsPerPackage,
+                        packageQuantity: bike.packageQuantity,
+                        totalUnits: bike.totalUnits,
+                        count: 0,
+                        bikeIds: []
+                    };
+                }
+                bikeGroups[key].count++;
+                bikeGroups[key].bikeIds.push(bike.id);
+            });
+            
+            if (Object.keys(bikeGroups).length === 0) {
                 $('#bike-list').html('<div class="text-center text-muted py-4">Tidak ada sepeda</div>');
                 return;
             }
             
-            filteredBikes.forEach(bike => {
+            Object.values(bikeGroups).forEach(group => {
                 let statusBadge = '';
                 let actions = '';
                 
-                if (bike.status === 'unassembled') {
+                if (group.status === 'unassembled') {
                     statusBadge = '<span class="status-badge status-unassembled">Belum Rakit</span>';
                     actions = `
-                        <button class="btn btn-sm btn-success assemble-btn" data-id="${bike.id}">
+                        <button class="btn btn-sm btn-success assemble-btn" data-ids='${JSON.stringify(group.bikeIds)}'>
                             <i class="fas fa-tools me-1"></i> Tandai Rakit
                         </button>
                     `;
-                } else if (bike.status === 'assembled') {
-                    statusBadge = '<span class="status-badge status-assembled">Ready Jual</span>';
-                    actions = `
-                        <button class="btn btn-sm btn-danger sell-btn" data-id="${bike.id}">
-                            <i class="fas fa-shopping-cart me-1"></i> Tandai Terjual
-                        </button>
-                    `;
-                } else if (bike.status === 'sold') {
-                    statusBadge = '<span class="status-badge status-sold">Terjual</span>';
-                    actions = '<span class="text-muted">Terjual</span>';
+                } else if (group.status === 'assembled') {
+                    statusBadge = '<span class="status-badge status-assembled">Sudah Rakit</span>';
                 }
-                
-                const unitInfo = bike.totalUnits > 1 ? 
-                    ` (Unit ${bike.unitNumber}/${bike.totalUnits})` : '';
                 
                 $('#bike-list').append(`
                     <div class="card bike-item">
-                        <div class="card-body">
+                        <div class="card-body bike-card-content">
+                            ${group.count > 1 ? `<div class="unit-count-badge">${group.count}</div>` : ''}
                             <div class="d-flex justify-content-between align-items-start">
                                 <div>
-                                    <h5 class="card-title">${bike.name}${unitInfo}</h5>
+                                    <h5 class="card-title">${group.name}</h5>
                                     <p class="card-text mb-1">
                                         <small class="text-muted">
-                                            ${bike.type} - ${bike.size}<br>
-                                            Supplier: ${bike.supplier} | Kemasan: ${bike.package}
-                                            ${bike.totalUnits > 1 ? `<br>${bike.packageQuantity} kemasan × ${bike.unitsPerPackage} unit` : ''}
+                                            ${group.type} - ${group.size}<br>
+                                            Supplier: ${group.supplier} | Kemasan: ${group.package}
+                                            ${group.totalUnits > 1 ? `<br>${group.packageQuantity} kemasan × ${group.unitsPerPackage} unit` : ''}
                                         </small>
                                     </p>
                                     <p class="card-text mb-0">
                                         <small>
-                                            Kedatangan: ${formatDate(bike.arrivalDate)}<br>
-                                            ${bike.assemblyDate ? `Rakit: ${formatDate(bike.assemblyDate)}<br>` : ''}
-                                            ${bike.soldDate ? `Terjual: ${formatDate(bike.soldDate)}` : ''}
+                                            Kedatangan: ${formatDate(group.arrivalDate)}<br>
+                                            Total Unit: ${group.count}
                                         </small>
                                     </p>
                                 </div>
@@ -847,7 +1026,7 @@
                             </div>
                             <div class="mt-3">
                                 ${actions}
-                                <button class="btn btn-sm btn-outline-secondary view-qr-btn" data-id="${bike.id}">
+                                <button class="btn btn-sm btn-outline-secondary view-qr-btn" data-id="${group.bikeIds[0]}">
                                     <i class="fas fa-qrcode me-1"></i> QR Code
                                 </button>
                             </div>
@@ -858,13 +1037,8 @@
             
             // Add event listeners for action buttons
             $('.assemble-btn').click(function() {
-                const bikeId = $(this).data('id');
-                markAsAssembled(bikeId);
-            });
-            
-            $('.sell-btn').click(function() {
-                const bikeId = $(this).data('id');
-                markAsSold(bikeId);
+                const bikeIds = JSON.parse($(this).data('ids'));
+                markAsAssembled(bikeIds);
             });
             
             $('.view-qr-btn').click(function() {
@@ -891,11 +1065,20 @@
         function updateDashboardCounts() {
             const unassembledCount = bikes.filter(bike => bike.status === 'unassembled').length;
             const assembledCount = bikes.filter(bike => bike.status === 'assembled').length;
-            const soldCount = bikes.filter(bike => bike.status === 'sold').length;
+            const lowStockCount = bikes.filter(bike => {
+                // Count bikes that have 2 or less units of the same model
+                const sameModelBikes = bikes.filter(b => 
+                    b.name === bike.name && 
+                    b.type === bike.type && 
+                    b.size === bike.size && 
+                    b.supplier === bike.supplier
+                );
+                return sameModelBikes.length <= 2;
+            }).length;
             
             $('#unassembled-count').text(unassembledCount);
             $('#assembled-count').text(assembledCount);
-            $('#sold-count').text(soldCount);
+            $('#low-stock-count').text(lowStockCount);
         }
         
         // Function to load bike select for QR generation
@@ -909,34 +1092,50 @@
         }
         
         // Function to mark bike as assembled
-        function markAsAssembled(bikeId) {
-            const bikeIndex = bikes.findIndex(bike => bike.id === bikeId);
-            if (bikeIndex !== -1) {
-                bikes[bikeIndex].status = 'assembled';
-                bikes[bikeIndex].assemblyDate = new Date().toISOString().split('T')[0];
-                localStorage.setItem('bikes', JSON.stringify(bikes));
+        function markAsAssembled(bikeIds) {
+            bikeIds.forEach(bikeId => {
+                const bikeIndex = bikes.findIndex(bike => bike.id === bikeId);
+                if (bikeIndex !== -1) {
+                    bikes[bikeIndex].status = 'assembled';
+                    bikes[bikeIndex].assemblyDate = new Date().toISOString().split('T')[0];
+                }
+            });
+            
+            localStorage.setItem('bikes', JSON.stringify(bikes));
+            loadBikeList();
+            updateDashboardCounts();
+            alert('Sepeda berhasil ditandai sebagai sudah dirakit!');
+        }
+        
+        // Function to start modal camera scan
+        function startModalCameraScan() {
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                $('#modal-camera-container').show();
+                $('#modal-camera-scan-btn').prop('disabled', true);
+                scanning = true;
                 
-                loadBikeList();
-                updateDashboardCounts();
-                alert('Sepeda berhasil ditandai sebagai sudah dirakit!');
+                navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+                    .then(function(mediaStream) {
+                        stream = mediaStream;
+                        const video = document.getElementById('modal-camera-feed');
+                        video.srcObject = stream;
+                        
+                        // Start scanning for QR codes
+                        scanFromCamera(video, 'modal');
+                    })
+                    .catch(function(err) {
+                        console.error('Error accessing camera:', err);
+                        $('#modal-scan-result').html('<div class="alert alert-danger">Tidak dapat mengakses kamera. Pastikan Anda memberikan izin akses kamera.</div>');
+                        $('#modal-camera-container').hide();
+                        $('#modal-camera-scan-btn').prop('disabled', false);
+                        scanning = false;
+                    });
+            } else {
+                $('#modal-scan-result').html('<div class="alert alert-warning">Browser tidak mendukung akses kamera.</div>');
             }
         }
         
-        // Function to mark bike as sold
-        function markAsSold(bikeId) {
-            const bikeIndex = bikes.findIndex(bike => bike.id === bikeId);
-            if (bikeIndex !== -1) {
-                bikes[bikeIndex].status = 'sold';
-                bikes[bikeIndex].soldDate = new Date().toISOString().split('T')[0];
-                localStorage.setItem('bikes', JSON.stringify(bikes));
-                
-                loadBikeList();
-                updateDashboardCounts();
-                alert('Sepeda berhasil ditandai sebagai terjual!');
-            }
-        }
-        
-        // Function to start camera scan
+        // Function to start regular camera scan
         function startCameraScan() {
             if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
                 $('#camera-container').show();
@@ -950,7 +1149,7 @@
                         video.srcObject = stream;
                         
                         // Start scanning for QR codes
-                        scanFromCamera(video);
+                        scanFromCamera(video, 'regular');
                     })
                     .catch(function(err) {
                         console.error('Error accessing camera:', err);
@@ -965,7 +1164,7 @@
         }
         
         // Function to scan QR from camera
-        function scanFromCamera(video) {
+        function scanFromCamera(video, type) {
             const canvas = document.createElement('canvas');
             const context = canvas.getContext('2d');
             
@@ -988,7 +1187,7 @@
                             const unitInfo = bike.totalUnits > 1 ? 
                                 ` (Unit ${bike.unitNumber}/${bike.totalUnits})` : '';
                                 
-                            $('#scan-result').html(`
+                            const resultHtml = `
                                 <div class="alert alert-success">
                                     <h5>${bike.name}${unitInfo}</h5>
                                     <p class="mb-1">${bike.type} - ${bike.size}</p>
@@ -996,10 +1195,23 @@
                                     <p class="mb-1">Supplier: ${bike.supplier}</p>
                                     <p class="mb-0">Kedatangan: ${formatDate(bike.arrivalDate)}</p>
                                 </div>
-                            `);
-                            stopCamera();
+                            `;
+                            
+                            if (type === 'modal') {
+                                $('#modal-scan-result').html(resultHtml);
+                                stopModalCamera();
+                                $('#quickScanModal').modal('hide');
+                            } else {
+                                $('#scan-result').html(resultHtml);
+                                stopCamera();
+                            }
                         } else {
-                            $('#scan-result').html('<div class="alert alert-warning">Sepeda tidak ditemukan dalam database</div>');
+                            const errorHtml = '<div class="alert alert-warning">Sepeda tidak ditemukan dalam database</div>';
+                            if (type === 'modal') {
+                                $('#modal-scan-result').html(errorHtml);
+                            } else {
+                                $('#scan-result').html(errorHtml);
+                            }
                         }
                     }
                 }
@@ -1013,7 +1225,7 @@
         }
         
         // Function to scan QR from image file
-        function scanQRFromImage(file) {
+        function scanQRFromImage(file, type) {
             const img = new Image();
             const url = URL.createObjectURL(file);
             
@@ -1037,7 +1249,7 @@
                         const unitInfo = bike.totalUnits > 1 ? 
                             ` (Unit ${bike.unitNumber}/${bike.totalUnits})` : '';
                             
-                        $('#scan-result').html(`
+                        const resultHtml = `
                             <div class="alert alert-success">
                                 <h5>${bike.name}${unitInfo}</h5>
                                 <p class="mb-1">${bike.type} - ${bike.size}</p>
@@ -1045,18 +1257,46 @@
                                 <p class="mb-1">Supplier: ${bike.supplier}</p>
                                 <p class="mb-0">Kedatangan: ${formatDate(bike.arrivalDate)}</p>
                             </div>
-                        `);
+                        `;
+                        
+                        if (type === 'modal') {
+                            $('#modal-scan-result').html(resultHtml);
+                            $('#quickScanModal').modal('hide');
+                        } else {
+                            $('#scan-result').html(resultHtml);
+                        }
                     } else {
-                        $('#scan-result').html('<div class="alert alert-warning">Sepeda tidak ditemukan dalam database</div>');
+                        const errorHtml = '<div class="alert alert-warning">Sepeda tidak ditemukan dalam database</div>';
+                        if (type === 'modal') {
+                            $('#modal-scan-result').html(errorHtml);
+                        } else {
+                            $('#scan-result').html(errorHtml);
+                        }
                     }
                 } else {
-                    $('#scan-result').html('<div class="alert alert-danger">Tidak dapat membaca QR code dari gambar.</div>');
+                    const errorHtml = '<div class="alert alert-danger">Tidak dapat membaca QR code dari gambar.</div>';
+                    if (type === 'modal') {
+                        $('#modal-scan-result').html(errorHtml);
+                    } else {
+                        $('#scan-result').html(errorHtml);
+                    }
                 }
                 
                 URL.revokeObjectURL(url);
             };
             
             img.src = url;
+        }
+        
+        // Function to stop modal camera
+        function stopModalCamera() {
+            scanning = false;
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+            $('#modal-camera-container').hide();
+            $('#modal-camera-scan-btn').prop('disabled', false);
         }
         
         // Function to stop camera
@@ -1196,11 +1436,11 @@
         function getStatusText(status) {
             switch(status) {
                 case 'unassembled': return 'Belum Rakit';
-                case 'assembled': return 'Ready Jual';
+                case 'assembled': return 'Sudah Rakit';
                 case 'sold': return 'Terjual';
                 default: return status;
             }
         }
     </script>
 </body>
-                    </html>
+</html>
