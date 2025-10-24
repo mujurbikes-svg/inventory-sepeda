@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
     <style>
         :root {
             --primary-color: #3498db;
@@ -123,8 +124,13 @@
             position: relative;
         }
         
-        #qr-video {
+        #camera-feed {
             width: 100%;
+            max-width: 400px;
+            height: 300px;
+            background-color: #000;
+            margin: 0 auto;
+            display: block;
             border-radius: 10px;
         }
         
@@ -147,18 +153,54 @@
             border-radius: 10px;
         }
         
-        #camera-feed {
-            width: 100%;
-            max-width: 400px;
-            height: 300px;
-            background-color: #000;
-            margin: 0 auto;
-            display: block;
-            border-radius: 10px;
-        }
-        
         #file-input {
             display: none;
+        }
+        
+        .qr-label-container {
+            text-align: left;
+            margin-top: 10px;
+            font-size: 12px;
+            line-height: 1.3;
+        }
+        
+        .qr-label-container strong {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+        
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #printable-qr, #printable-qr * {
+                visibility: visible;
+            }
+            #printable-qr {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 58mm;
+                padding: 5px;
+            }
+        }
+        
+        .printable-qr {
+            width: 58mm;
+            padding: 5px;
+            border: 1px dashed #ccc;
+            margin: 10px auto;
+            background: white;
+        }
+        
+        .printable-qr img {
+            width: 100%;
+            height: auto;
+        }
+        
+        .package-unit-input {
+            margin-top: 8px;
         }
     </style>
 </head>
@@ -271,6 +313,18 @@
                         </div>
                     </div>
                     
+                    <div class="mb-3 package-unit-input">
+                        <label for="units-per-package" class="form-label">Unit per Kemasan</label>
+                        <input type="number" class="form-control" id="units-per-package" value="1" min="1" required>
+                        <div class="form-text">Jumlah unit dalam satu kemasan</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="package-quantity" class="form-label">Jumlah Kemasan</label>
+                        <input type="number" class="form-control" id="package-quantity" value="1" min="1" required>
+                        <div class="form-text">Total kemasan yang diterima</div>
+                    </div>
+                    
                     <div class="mb-3">
                         <label for="arrival-date" class="form-label">Tanggal Kedatangan</label>
                         <input type="date" class="form-control" id="arrival-date" required>
@@ -304,10 +358,17 @@
                     </div>
                     
                     <div id="qr-code-container" class="qr-container" style="display: none;">
-                        <div id="qrcode"></div>
-                        <p class="mt-2" id="qr-bike-name"></p>
+                        <div id="printable-qr" class="printable-qr">
+                            <div id="qrcode"></div>
+                            <div class="qr-label-container">
+                                <strong id="qr-bike-name"></strong>
+                                <div id="qr-bike-type-size"></div>
+                                <div id="qr-bike-supplier"></div>
+                                <div id="qr-bike-arrival"></div>
+                            </div>
+                        </div>
                         <button class="btn btn-outline-primary mt-2" id="download-qr">
-                            <i class="fas fa-download me-1"></i> Download QR
+                            <i class="fas fa-print me-1"></i> Print QR Label
                         </button>
                     </div>
                 </div>
@@ -472,27 +533,41 @@
             $('#bike-form').submit(function(e) {
                 e.preventDefault();
                 
-                const bikeData = {
-                    id: Date.now().toString(),
-                    name: $('#bike-name').val(),
-                    type: $('#bike-type').val(),
-                    size: $('#bike-size').val(),
-                    supplier: $('#bike-supplier').val(),
-                    package: $('#bike-package').val(),
-                    arrivalDate: $('#arrival-date').val(),
-                    assemblyDate: null,
-                    soldDate: null,
-                    status: 'unassembled'
-                };
+                const unitsPerPackage = parseInt($('#units-per-package').val());
+                const packageQuantity = parseInt($('#package-quantity').val());
+                const totalUnits = unitsPerPackage * packageQuantity;
                 
-                bikes.push(bikeData);
+                // Create multiple bike entries based on total units
+                for (let i = 0; i < totalUnits; i++) {
+                    const bikeData = {
+                        id: Date.now().toString() + '-' + i,
+                        name: $('#bike-name').val(),
+                        type: $('#bike-type').val(),
+                        size: $('#bike-size').val(),
+                        supplier: $('#bike-supplier').val(),
+                        package: $('#bike-package').val(),
+                        unitsPerPackage: unitsPerPackage,
+                        packageQuantity: packageQuantity,
+                        unitNumber: i + 1,
+                        totalUnits: totalUnits,
+                        arrivalDate: $('#arrival-date').val(),
+                        assemblyDate: null,
+                        soldDate: null,
+                        status: 'unassembled'
+                    };
+                    
+                    bikes.push(bikeData);
+                }
+                
                 localStorage.setItem('bikes', JSON.stringify(bikes));
                 
                 // Reset form
                 $('#bike-form')[0].reset();
+                $('#units-per-package').val(1);
+                $('#package-quantity').val(1);
                 
                 // Show success message
-                alert('Sepeda berhasil ditambahkan!');
+                alert(`Berhasil menambahkan ${totalUnits} unit sepeda!`);
                 
                 // Update UI
                 loadBikeList();
@@ -618,27 +693,33 @@
                         qr.addData(bikeId);
                         qr.make();
                         
-                        $('#qrcode').html(qr.createImgTag(5));
+                        $('#qrcode').html(qr.createImgTag(4));
                         $('#qr-bike-name').text(bike.name);
+                        $('#qr-bike-type-size').text(`${bike.type} - ${bike.size}`);
+                        $('#qr-bike-supplier').text(`Supplier: ${bike.supplier}`);
+                        $('#qr-bike-arrival').text(`Tgl: ${formatDate(bike.arrivalDate)}`);
                     }
                 } else {
                     $('#qr-code-container').hide();
                 }
             });
             
-            // Download QR Code
+            // Print QR Code
             $('#download-qr').click(function() {
-                const img = document.querySelector('#qrcode img');
-                if (img) {
-                    const link = document.createElement('a');
-                    link.download = `qr-${$('#bike-select option:selected').text().replace(/\s+/g, '-')}.png`;
-                    link.href = img.src;
-                    link.click();
-                }
+                const printContent = document.getElementById('printable-qr').innerHTML;
+                const originalContent = document.body.innerHTML;
+                
+                document.body.innerHTML = printContent;
+                window.print();
+                document.body.innerHTML = originalContent;
+                
+                // Reload the page to restore functionality
+                location.reload();
             });
             
             // QR Code Scanning
             let stream = null;
+            let scanning = false;
             
             // Camera scan
             $('#camera-scan-btn').click(function() {
@@ -738,16 +819,20 @@
                     actions = '<span class="text-muted">Terjual</span>';
                 }
                 
+                const unitInfo = bike.totalUnits > 1 ? 
+                    ` (Unit ${bike.unitNumber}/${bike.totalUnits})` : '';
+                
                 $('#bike-list').append(`
                     <div class="card bike-item">
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-start">
                                 <div>
-                                    <h5 class="card-title">${bike.name}</h5>
+                                    <h5 class="card-title">${bike.name}${unitInfo}</h5>
                                     <p class="card-text mb-1">
                                         <small class="text-muted">
                                             ${bike.type} - ${bike.size}<br>
                                             Supplier: ${bike.supplier} | Kemasan: ${bike.package}
+                                            ${bike.totalUnits > 1 ? `<br>${bike.packageQuantity} kemasan × ${bike.unitsPerPackage} unit` : ''}
                                         </small>
                                     </p>
                                     <p class="card-text mb-0">
@@ -817,7 +902,9 @@
         function loadBikeSelect() {
             $('#bike-select').html('<option value="">Pilih sepeda untuk generate QR</option>');
             bikes.forEach(bike => {
-                $('#bike-select').append(`<option value="${bike.id}">${bike.name}</option>`);
+                const unitInfo = bike.totalUnits > 1 ? 
+                    ` (Unit ${bike.unitNumber}/${bike.totalUnits})` : '';
+                $('#bike-select').append(`<option value="${bike.id}">${bike.name}${unitInfo}</option>`);
             });
         }
         
@@ -854,6 +941,7 @@
             if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
                 $('#camera-container').show();
                 $('#camera-scan-btn').prop('disabled', true);
+                scanning = true;
                 
                 navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
                     .then(function(mediaStream) {
@@ -869,6 +957,7 @@
                         $('#scan-result').html('<div class="alert alert-danger">Tidak dapat mengakses kamera. Pastikan Anda memberikan izin akses kamera.</div>');
                         $('#camera-container').hide();
                         $('#camera-scan-btn').prop('disabled', false);
+                        scanning = false;
                     });
             } else {
                 $('#scan-result').html('<div class="alert alert-warning">Browser tidak mendukung akses kamera.</div>');
@@ -881,38 +970,41 @@
             const context = canvas.getContext('2d');
             
             function scan() {
-                if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                if (video.readyState === video.HAVE_ENOUGH_DATA && scanning) {
                     canvas.width = video.videoWidth;
                     canvas.height = video.videoHeight;
                     context.drawImage(video, 0, 0, canvas.width, canvas.height);
                     
                     const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
                     
-                    // Simple QR code detection by looking for patterns
-                    // This is a simplified approach - in a real app you'd use a proper QR library
-                    const qrCode = detectQRCode(imageData);
+                    // Use jsQR library for QR code detection
+                    const code = jsQR(imageData.data, imageData.width, imageData.height);
                     
-                    if (qrCode) {
-                        const bikeId = qrCode;
+                    if (code) {
+                        const bikeId = code.data;
                         const bike = bikes.find(b => b.id === bikeId);
                         
                         if (bike) {
+                            const unitInfo = bike.totalUnits > 1 ? 
+                                ` (Unit ${bike.unitNumber}/${bike.totalUnits})` : '';
+                                
                             $('#scan-result').html(`
                                 <div class="alert alert-success">
-                                    <h5>${bike.name}</h5>
+                                    <h5>${bike.name}${unitInfo}</h5>
                                     <p class="mb-1">${bike.type} - ${bike.size}</p>
                                     <p class="mb-1">Status: ${getStatusText(bike.status)}</p>
+                                    <p class="mb-1">Supplier: ${bike.supplier}</p>
                                     <p class="mb-0">Kedatangan: ${formatDate(bike.arrivalDate)}</p>
                                 </div>
                             `);
                             stopCamera();
                         } else {
-                            $('#scan-result').html('<div class="alert alert-warning">Sepeda tidak ditemukan</div>');
+                            $('#scan-result').html('<div class="alert alert-warning">Sepeda tidak ditemukan dalam database</div>');
                         }
                     }
                 }
                 
-                if (stream) {
+                if (scanning) {
                     requestAnimationFrame(scan);
                 }
             }
@@ -933,23 +1025,29 @@
                 context.drawImage(img, 0, 0);
                 
                 const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-                const qrCode = detectQRCode(imageData);
                 
-                if (qrCode) {
-                    const bikeId = qrCode;
+                // Use jsQR library for QR code detection
+                const code = jsQR(imageData.data, imageData.width, imageData.height);
+                
+                if (code) {
+                    const bikeId = code.data;
                     const bike = bikes.find(b => b.id === bikeId);
                     
                     if (bike) {
+                        const unitInfo = bike.totalUnits > 1 ? 
+                            ` (Unit ${bike.unitNumber}/${bike.totalUnits})` : '';
+                            
                         $('#scan-result').html(`
                             <div class="alert alert-success">
-                                <h5>${bike.name}</h5>
+                                <h5>${bike.name}${unitInfo}</h5>
                                 <p class="mb-1">${bike.type} - ${bike.size}</p>
                                 <p class="mb-1">Status: ${getStatusText(bike.status)}</p>
+                                <p class="mb-1">Supplier: ${bike.supplier}</p>
                                 <p class="mb-0">Kedatangan: ${formatDate(bike.arrivalDate)}</p>
                             </div>
                         `);
                     } else {
-                        $('#scan-result').html('<div class="alert alert-warning">Sepeda tidak ditemukan</div>');
+                        $('#scan-result').html('<div class="alert alert-warning">Sepeda tidak ditemukan dalam database</div>');
                     }
                 } else {
                     $('#scan-result').html('<div class="alert alert-danger">Tidak dapat membaca QR code dari gambar.</div>');
@@ -961,21 +1059,9 @@
             img.src = url;
         }
         
-        // Simplified QR code detection (for demo purposes)
-        // In a real application, you would use a proper QR code scanning library
-        function detectQRCode(imageData) {
-            // This is a mock implementation
-            // In reality, you would use a library like jsQR or similar
-            // For this demo, we'll just return a fake ID sometimes
-            if (Math.random() > 0.7) {
-                // Return a random bike ID for demo
-                return bikes.length > 0 ? bikes[Math.floor(Math.random() * bikes.length)].id : null;
-            }
-            return null;
-        }
-        
         // Function to stop camera
         function stopCamera() {
+            scanning = false;
             if (stream) {
                 stream.getTracks().forEach(track => track.stop());
                 stream = null;
@@ -1117,4 +1203,4 @@
         }
     </script>
 </body>
-</html>
+                    </html>
