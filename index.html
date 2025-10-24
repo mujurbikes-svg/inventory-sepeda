@@ -3,265 +3,1118 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inventory Sepeda</title>
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#4CAF50">
+    <title>Inventaris Toko Sepeda</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2ecc71;
+            --danger-color: #e74c3c;
+            --warning-color: #f39c12;
+            --dark-color: #2c3e50;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            padding-bottom: 70px;
+        }
+        
+        .navbar {
+            background-color: var(--dark-color);
+        }
+        
+        .card {
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 15px;
+            border: none;
+        }
+        
+        .card-header {
+            background-color: white;
+            border-bottom: 1px solid #eee;
+            font-weight: 600;
+        }
+        
+        .status-badge {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .status-unassembled {
+            background-color: var(--warning-color);
+            color: white;
+        }
+        
+        .status-assembled {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+        
+        .status-sold {
+            background-color: var(--danger-color);
+            color: white;
+        }
+        
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: white;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+        
+        .nav-item {
+            text-align: center;
+            padding: 10px 0;
+            flex: 1;
+        }
+        
+        .nav-item.active {
+            color: var(--primary-color);
+        }
+        
+        .nav-icon {
+            font-size: 1.5rem;
+            display: block;
+        }
+        
+        .nav-label {
+            font-size: 0.8rem;
+            margin-top: 2px;
+        }
+        
+        .page {
+            display: none;
+        }
+        
+        .page.active {
+            display: block;
+        }
+        
+        .bike-item {
+            transition: transform 0.2s;
+        }
+        
+        .bike-item:hover {
+            transform: translateY(-2px);
+        }
+        
+        .qr-container {
+            text-align: center;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            margin: 20px auto;
+            max-width: 300px;
+        }
+        
+        .scanner-container {
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto;
+            position: relative;
+        }
+        
+        #qr-video {
+            width: 100%;
+            border-radius: 10px;
+        }
+        
+        .scan-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 200px;
+            height: 200px;
+            border: 2px solid white;
+            border-radius: 10px;
+            box-shadow: 0 0 0 1000px rgba(0, 0, 0, 0.3);
+        }
+        
+        .form-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+        }
+        
+        #camera-feed {
+            width: 100%;
+            max-width: 400px;
+            height: 300px;
+            background-color: #000;
+            margin: 0 auto;
+            display: block;
+            border-radius: 10px;
+        }
+        
+        #file-input {
+            display: none;
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Header -->
-        <header class="header">
-            <h1>Inventory Sepeda</h1>
-            <div class="header-stats">
-                <div class="stat-card">
-                    <span class="stat-number" id="total-stok">0</span>
-                    <span class="stat-label">Total Stok</span>
-                </div>
-                <div class="stat-card">
-                    <span class="stat-number" id="belum-rakit">0</span>
-                    <span class="stat-label">Belum Rakit</span>
-                </div>
-                <div class="stat-card">
-                    <span class="stat-number" id="sudah-rakit">0</span>
-                    <span class="stat-label">Siap Jual</span>
-                </div>
-            </div>
-        </header>
+    <!-- Navbar -->
+    <nav class="navbar navbar-dark">
+        <div class="container-fluid">
+            <span class="navbar-brand mb-0 h1">
+                <i class="fas fa-bicycle me-2"></i>Inventaris Sepeda
+            </span>
+            <button class="btn btn-outline-light btn-sm" id="export-btn">
+                <i class="fas fa-download"></i>
+            </button>
+        </div>
+    </nav>
 
-        <!-- Navigation -->
-        <nav class="nav-tabs">
-            <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
-            <button class="tab-btn" data-tab="stok">Data Stok</button>
-            <button class="tab-btn" data-tab="perakitan">Perakitan</button>
-            <button class="tab-btn" data-tab="master">Master Data</button>
-        </nav>
-
-        <!-- Dashboard Tab -->
-        <div id="dashboard" class="tab-content active">
-            <div class="search-section">
-                <input type="text" id="search-input" placeholder="Cari sepeda...">
-                <select id="status-filter">
-                    <option value="">Semua Status</option>
-                    <option value="belum-rakit">Belum Dirakit</option>
-                    <option value="sudah-rakit">Sudah Dirakit</option>
-                    <option value="terjual">Terjual</option>
-                </select>
+    <!-- Main Content -->
+    <div class="container mt-3">
+        <!-- Dashboard Page -->
+        <div id="dashboard-page" class="page active">
+            <h4 class="mb-3">Dashboard Inventaris</h4>
+            
+            <div class="row mb-4">
+                <div class="col-4">
+                    <div class="card text-center bg-warning text-white">
+                        <div class="card-body py-3">
+                            <h5 id="unassembled-count">0</h5>
+                            <small>Belum Rakit</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="card text-center bg-success text-white">
+                        <div class="card-body py-3">
+                            <h5 id="assembled-count">0</h5>
+                            <small>Ready Jual</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="card text-center bg-danger text-white">
+                        <div class="card-body py-3">
+                            <h5 id="sold-count">0</h5>
+                            <small>Terjual</small>
+                        </div>
+                    </div>
+                </div>
             </div>
             
-            <div class="notification-section">
-                <div id="notifications"></div>
+            <div class="d-flex mb-3">
+                <button class="btn btn-outline-primary me-2 active filter-btn" data-status="all">Semua</button>
+                <button class="btn btn-outline-warning me-2 filter-btn" data-status="unassembled">Belum Rakit</button>
+                <button class="btn btn-outline-success me-2 filter-btn" data-status="assembled">Ready Jual</button>
+                <button class="btn btn-outline-danger filter-btn" data-status="sold">Terjual</button>
             </div>
-
-            <div class="stok-list" id="stok-list">
-                <!-- Daftar stok akan dimuat di sini -->
+            
+            <div id="bike-list">
+                <!-- Daftar sepeda akan dimuat di sini -->
             </div>
         </div>
 
-        <!-- Data Stok Tab -->
-        <div id="stok" class="tab-content">
-            <div class="section-header">
-                <h3>Data Stok Sepeda</h3>
-                <button id="btn-tambah-stok" class="btn-primary">+ Tambah Sepeda</button>
-            </div>
-
-            <!-- Form Input Stok (Awalnya tersembunyi) -->
-            <div id="form-input-container" class="form-container" style="display: none;">
-                <form id="form-input-stok" class="form">
-                    <h4>Input Stok Baru</h4>
+        <!-- Add Bike Page -->
+        <div id="add-bike-page" class="page">
+            <h4 class="mb-3">Tambah Sepeda Baru</h4>
+            
+            <div class="form-section">
+                <form id="bike-form">
+                    <div class="mb-3">
+                        <label for="bike-name" class="form-label">Nama Sepeda</label>
+                        <input type="text" class="form-control" id="bike-name" required>
+                    </div>
                     
-                    <div class="form-group">
-                        <label>Nama Sepeda*</label>
-                        <input type="text" id="nama-sepeda" required placeholder="Contoh: Polygon Premier, United Detroit, dll">
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Tipe Sepeda*</label>
-                            <select id="tipe" required>
-                                <option value="">Pilih Tipe</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label>Ukuran*</label>
-                            <select id="ukuran" required>
-                                <option value="">Pilih Ukuran</option>
-                            </select>
+                    <div class="mb-3">
+                        <label for="bike-type" class="form-label">Tipe</label>
+                        <select class="form-select" id="bike-type" required>
+                            <option value="">Pilih Tipe</option>
+                        </select>
+                        <div class="form-text">
+                            <a href="#" id="add-type-btn">+ Tambah tipe baru</a>
                         </div>
                     </div>
-
-                    <div class="form-group">
-                        <label>Supplier*</label>
-                        <select id="supplier" required>
+                    
+                    <div class="mb-3">
+                        <label for="bike-size" class="form-label">Ukuran</label>
+                        <select class="form-select" id="bike-size" required>
+                            <option value="">Pilih Ukuran</option>
+                        </select>
+                        <div class="form-text">
+                            <a href="#" id="add-size-btn">+ Tambah ukuran baru</a>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="bike-supplier" class="form-label">Supplier</label>
+                        <select class="form-select" id="bike-supplier" required>
                             <option value="">Pilih Supplier</option>
                         </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Warna (opsional)</label>
-                        <input type="text" id="warna" placeholder="Contoh: Merah, 2 unit">
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Jenis Kemasan*</label>
-                            <select id="kemasan" required>
-                                <option value="">Pilih Kemasan</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Jumlah Unit per Kemasan*</label>
-                            <input type="number" id="unit-per-kemasan" required min="1" value="1">
+                        <div class="form-text">
+                            <a href="#" id="add-supplier-btn">+ Tambah supplier baru</a>
                         </div>
                     </div>
-
-                    <div class="form-group">
-                        <label>Lokasi Penyimpanan*</label>
-                        <select id="lokasi" required>
-                            <option value="">Pilih Lokasi</option>
+                    
+                    <div class="mb-3">
+                        <label for="bike-package" class="form-label">Kemasan</label>
+                        <select class="form-select" id="bike-package" required>
+                            <option value="">Pilih Kemasan</option>
                         </select>
+                        <div class="form-text">
+                            <a href="#" id="add-package-btn">+ Tambah kemasan baru</a>
+                        </div>
                     </div>
-
-                    <div class="form-group">
-                        <label>Tanggal Datang</label>
-                        <input type="date" id="tanggal-datang">
-                        <small>Kosongkan jika tidak diketahui</small>
+                    
+                    <div class="mb-3">
+                        <label for="arrival-date" class="form-label">Tanggal Kedatangan</label>
+                        <input type="date" class="form-control" id="arrival-date" required>
                     </div>
-
-                    <div class="form-actions">
-                        <button type="submit" class="btn-primary">Simpan Stok & Generate QR</button>
-                        <button type="button" id="btn-batal-input" class="btn-secondary">Batal</button>
-                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100">Simpan Sepeda</button>
                 </form>
             </div>
+        </div>
 
-            <!-- Daftar Stok yang sudah diinput -->
-            <div class="stok-list" id="list-stok-terinput">
-                <!-- Data stok akan dimuat di sini -->
+        <!-- QR Tools Page -->
+        <div id="qr-page" class="page">
+            <h4 class="mb-3">QR Code Tools</h4>
+            
+            <ul class="nav nav-tabs mb-3" id="qrTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="generate-tab" data-bs-toggle="tab" data-bs-target="#generate" type="button" role="tab">Generate QR</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="scan-tab" data-bs-toggle="tab" data-bs-target="#scan" type="button" role="tab">Scan QR</button>
+                </li>
+            </ul>
+            
+            <div class="tab-content" id="qrTabsContent">
+                <div class="tab-pane fade show active" id="generate" role="tabpanel">
+                    <div class="mb-3">
+                        <label for="bike-select" class="form-label">Pilih Sepeda</label>
+                        <select class="form-select" id="bike-select">
+                            <option value="">Pilih sepeda untuk generate QR</option>
+                        </select>
+                    </div>
+                    
+                    <div id="qr-code-container" class="qr-container" style="display: none;">
+                        <div id="qrcode"></div>
+                        <p class="mt-2" id="qr-bike-name"></p>
+                        <button class="btn btn-outline-primary mt-2" id="download-qr">
+                            <i class="fas fa-download me-1"></i> Download QR
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="tab-pane fade" id="scan" role="tabpanel">
+                    <div class="mb-3">
+                        <p>Pilih metode scanning:</p>
+                        <button class="btn btn-primary w-100 mb-2" id="camera-scan-btn">
+                            <i class="fas fa-camera me-1"></i> Gunakan Kamera
+                        </button>
+                        <button class="btn btn-secondary w-100" id="upload-scan-btn">
+                            <i class="fas fa-upload me-1"></i> Upload Gambar QR
+                        </button>
+                        <input type="file" id="file-input" accept="image/*">
+                    </div>
+                    
+                    <div id="camera-container" style="display: none;">
+                        <video id="camera-feed" autoplay playsinline></video>
+                        <div class="scan-overlay"></div>
+                        <button class="btn btn-danger w-100 mt-2" id="stop-camera-btn">
+                            <i class="fas fa-stop me-1"></i> Hentikan Kamera
+                        </button>
+                    </div>
+                    
+                    <div id="scan-result" class="mt-3 text-center"></div>
+                </div>
             </div>
         </div>
 
-        <!-- Perakitan Tab -->
-        <div id="perakitan" class="tab-content">
-            <div class="form">
-                <h3>Proses Perakitan</h3>
-                <div class="form-group">
-                    <label>Pilih Stok Belum Dirakit</label>
-                    <select id="stok-belum-rakit">
-                        <option value="">Pilih Sepeda</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label>Pegawai yang Merakit</label>
-                    <select id="pegawai-rakit" required>
-                        <option value="">Pilih Pegawai</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label>Tanggal Perakitan</label>
-                    <input type="date" id="tanggal-rakit" required>
-                </div>
-
-                <button id="btn-proses-rakit" class="btn-primary">Proses Perakitan</button>
-            </div>
-
-            <div class="riwayat-perakitan">
-                <h3>Riwayat Perakitan</h3>
-                <div id="list-riwayat-perakitan"></div>
-            </div>
-        </div>
-
-        <!-- Master Data Tab -->
-        <div id="master" class="tab-content">
-            <div class="master-data-section">
-                <div class="master-item">
-                    <h4>Nama Sepeda</h4>
-                    <div class="input-group">
-                        <input type="text" id="new-nama-sepeda" placeholder="Nama model sepeda">
-                        <button onclick="addMasterData('nama-sepeda')">Tambah</button>
+        <!-- Data Master Page -->
+        <div id="master-data-page" class="page">
+            <h4 class="mb-3">Data Master</h4>
+            
+            <ul class="nav nav-pills mb-3" id="masterTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="type-tab" data-bs-toggle="pill" data-bs-target="#type" type="button">Tipe</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="size-tab" data-bs-toggle="pill" data-bs-target="#size" type="button">Ukuran</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="supplier-tab" data-bs-toggle="pill" data-bs-target="#supplier" type="button">Supplier</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="package-tab" data-bs-toggle="pill" data-bs-target="#package" type="button">Kemasan</button>
+                </li>
+            </ul>
+            
+            <div class="tab-content" id="masterTabsContent">
+                <div class="tab-pane fade show active" id="type" role="tabpanel">
+                    <div class="input-group mb-3">
+                        <input type="text" class="form-control" id="new-type" placeholder="Tambah tipe baru">
+                        <button class="btn btn-primary" type="button" id="save-type">Tambah</button>
                     </div>
-                    <div id="list-nama-sepeda" class="master-list"></div>
+                    <ul class="list-group" id="type-list">
+                        <!-- Daftar tipe akan dimuat di sini -->
+                    </ul>
                 </div>
-
-                <div class="master-item">
-                    <h4>Tipe Sepeda</h4>
-                    <div class="input-group">
-                        <input type="text" id="new-tipe" placeholder="Tipe baru">
-                        <button onclick="addMasterData('tipe')">Tambah</button>
+                
+                <div class="tab-pane fade" id="size" role="tabpanel">
+                    <div class="input-group mb-3">
+                        <input type="text" class="form-control" id="new-size" placeholder="Tambah ukuran baru">
+                        <button class="btn btn-primary" type="button" id="save-size">Tambah</button>
                     </div>
-                    <div id="list-tipe" class="master-list"></div>
+                    <ul class="list-group" id="size-list">
+                        <!-- Daftar ukuran akan dimuat di sini -->
+                    </ul>
                 </div>
-
-                <div class="master-item">
-                    <h4>Ukuran</h4>
-                    <div class="input-group">
-                        <input type="text" id="new-ukuran" placeholder="Ukuran baru">
-                        <button onclick="addMasterData('ukuran')">Tambah</button>
+                
+                <div class="tab-pane fade" id="supplier" role="tabpanel">
+                    <div class="input-group mb-3">
+                        <input type="text" class="form-control" id="new-supplier" placeholder="Tambah supplier baru">
+                        <button class="btn btn-primary" type="button" id="save-supplier">Tambah</button>
                     </div>
-                    <div id="list-ukuran" class="master-list"></div>
+                    <ul class="list-group" id="supplier-list">
+                        <!-- Daftar supplier akan dimuat di sini -->
+                    </ul>
                 </div>
-
-                <div class="master-item">
-                    <h4>Supplier</h4>
-                    <div class="input-group">
-                        <input type="text" id="new-supplier" placeholder="Supplier baru">
-                        <button onclick="addMasterData('supplier')">Tambah</button>
+                
+                <div class="tab-pane fade" id="package" role="tabpanel">
+                    <div class="input-group mb-3">
+                        <input type="text" class="form-control" id="new-package" placeholder="Tambah kemasan baru">
+                        <button class="btn btn-primary" type="button" id="save-package">Tambah</button>
                     </div>
-                    <div id="list-supplier" class="master-list"></div>
+                    <ul class="list-group" id="package-list">
+                        <!-- Daftar kemasan akan dimuat di sini -->
+                    </ul>
                 </div>
-
-                <div class="master-item">
-                    <h4>Jenis Kemasan</h4>
-                    <div class="input-group">
-                        <input type="text" id="new-kemasan" placeholder="Jenis kemasan">
-                        <button onclick="addMasterData('kemasan')">Tambah</button>
-                    </div>
-                    <div id="list-kemasan" class="master-list"></div>
-                </div>
-
-                <div class="master-item">
-                    <h4>Lokasi Penyimpanan</h4>
-                    <div class="input-group">
-                        <input type="text" id="new-lokasi" placeholder="Lokasi baru">
-                        <button onclick="addMasterData('lokasi')">Tambah</button>
-                    </div>
-                    <div id="list-lokasi" class="master-list"></div>
-                </div>
-
-                <div class="master-item">
-                    <h4>Pegawai</h4>
-                    <div class="input-group">
-                        <input type="text" id="new-pegawai" placeholder="Nama pegawai">
-                        <button onclick="addMasterData('pegawai')">Tambah</button>
-                    </div>
-                    <div id="list-pegawai" class="master-list"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal untuk QR Code -->
-    <div id="qr-modal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <h3>Label Stiker Sepeda</h3>
-            <div id="qr-label-container">
-                <!-- Template label akan dimuat di sini -->
-            </div>
-            <div class="modal-actions">
-                <button id="btn-print-label" class="btn-primary">Print Label</button>
-                <button id="btn-tutup-modal" class="btn-secondary">Tutup</button>
             </div>
         </div>
     </div>
 
-    <script src="js/qrcode.js"></script>
-    <script src="js/database.js"></script>
-    <script src="js/print.js"></script>
-    <script src="js/app.js"></script>
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav">
+        <div class="d-flex">
+            <div class="nav-item active" data-page="dashboard-page">
+                <i class="nav-icon fas fa-home"></i>
+                <div class="nav-label">Dashboard</div>
+            </div>
+            <div class="nav-item" data-page="add-bike-page">
+                <i class="nav-icon fas fa-plus-circle"></i>
+                <div class="nav-label">Tambah</div>
+            </div>
+            <div class="nav-item" data-page="qr-page">
+                <i class="nav-icon fas fa-qrcode"></i>
+                <div class="nav-label">QR Code</div>
+            </div>
+            <div class="nav-item" data-page="master-data-page">
+                <i class="nav-icon fas fa-cog"></i>
+                <div class="nav-label">Data Master</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap & jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Data Storage
+        let bikes = JSON.parse(localStorage.getItem('bikes')) || [];
+        let masterData = JSON.parse(localStorage.getItem('masterData')) || {
+            types: ['Mountain Bike', 'Road Bike', 'City Bike', 'BMX'],
+            sizes: ['16"', '18"', '20"', '24"', '26"', '27.5"', '29"'],
+            suppliers: ['Supplier A', 'Supplier B', 'Supplier C'],
+            packages: ['Kardus', 'Plastik', 'Kayu']
+        };
+
+        // Initialize App
+        $(document).ready(function() {
+            // Initialize master data in localStorage if not exists
+            if (!localStorage.getItem('masterData')) {
+                localStorage.setItem('masterData', JSON.stringify(masterData));
+            }
+            
+            // Load initial data
+            loadMasterDataToForms();
+            loadBikeList();
+            updateDashboardCounts();
+            loadBikeSelect();
+            
+            // Navigation
+            $('.nav-item').click(function() {
+                $('.nav-item').removeClass('active');
+                $(this).addClass('active');
+                
+                const pageId = $(this).data('page');
+                $('.page').removeClass('active');
+                $('#' + pageId).addClass('active');
+            });
+            
+            // Filter bikes by status
+            $('.filter-btn').click(function() {
+                $('.filter-btn').removeClass('active');
+                $(this).addClass('active');
+                
+                const status = $(this).data('status');
+                loadBikeList(status);
+            });
+            
+            // Add bike form submission
+            $('#bike-form').submit(function(e) {
+                e.preventDefault();
+                
+                const bikeData = {
+                    id: Date.now().toString(),
+                    name: $('#bike-name').val(),
+                    type: $('#bike-type').val(),
+                    size: $('#bike-size').val(),
+                    supplier: $('#bike-supplier').val(),
+                    package: $('#bike-package').val(),
+                    arrivalDate: $('#arrival-date').val(),
+                    assemblyDate: null,
+                    soldDate: null,
+                    status: 'unassembled'
+                };
+                
+                bikes.push(bikeData);
+                localStorage.setItem('bikes', JSON.stringify(bikes));
+                
+                // Reset form
+                $('#bike-form')[0].reset();
+                
+                // Show success message
+                alert('Sepeda berhasil ditambahkan!');
+                
+                // Update UI
+                loadBikeList();
+                updateDashboardCounts();
+                loadBikeSelect();
+                
+                // Navigate to dashboard
+                $('.nav-item').removeClass('active');
+                $('.nav-item[data-page="dashboard-page"]').addClass('active');
+                $('.page').removeClass('active');
+                $('#dashboard-page').addClass('active');
+            });
+            
+            // Add master data items
+            $('#save-type').click(function() {
+                const newType = $('#new-type').val().trim();
+                if (newType && !masterData.types.includes(newType)) {
+                    masterData.types.push(newType);
+                    localStorage.setItem('masterData', JSON.stringify(masterData));
+                    $('#new-type').val('');
+                    loadMasterDataToForms();
+                    loadTypeList();
+                }
+            });
+            
+            $('#save-size').click(function() {
+                const newSize = $('#new-size').val().trim();
+                if (newSize && !masterData.sizes.includes(newSize)) {
+                    masterData.sizes.push(newSize);
+                    localStorage.setItem('masterData', JSON.stringify(masterData));
+                    $('#new-size').val('');
+                    loadMasterDataToForms();
+                    loadSizeList();
+                }
+            });
+            
+            $('#save-supplier').click(function() {
+                const newSupplier = $('#new-supplier').val().trim();
+                if (newSupplier && !masterData.suppliers.includes(newSupplier)) {
+                    masterData.suppliers.push(newSupplier);
+                    localStorage.setItem('masterData', JSON.stringify(masterData));
+                    $('#new-supplier').val('');
+                    loadMasterDataToForms();
+                    loadSupplierList();
+                }
+            });
+            
+            $('#save-package').click(function() {
+                const newPackage = $('#new-package').val().trim();
+                if (newPackage && !masterData.packages.includes(newPackage)) {
+                    masterData.packages.push(newPackage);
+                    localStorage.setItem('masterData', JSON.stringify(masterData));
+                    $('#new-package').val('');
+                    loadMasterDataToForms();
+                    loadPackageList();
+                }
+            });
+            
+            // Quick add from bike form
+            $('#add-type-btn').click(function(e) {
+                e.preventDefault();
+                $('#masterTabs .nav-link').removeClass('active');
+                $('#type-tab').addClass('active');
+                $('#masterTabsContent .tab-pane').removeClass('show active');
+                $('#type').addClass('show active');
+                
+                $('.nav-item').removeClass('active');
+                $('.nav-item[data-page="master-data-page"]').addClass('active');
+                $('.page').removeClass('active');
+                $('#master-data-page').addClass('active');
+            });
+            
+            $('#add-size-btn').click(function(e) {
+                e.preventDefault();
+                $('#masterTabs .nav-link').removeClass('active');
+                $('#size-tab').addClass('active');
+                $('#masterTabsContent .tab-pane').removeClass('show active');
+                $('#size').addClass('show active');
+                
+                $('.nav-item').removeClass('active');
+                $('.nav-item[data-page="master-data-page"]').addClass('active');
+                $('.page').removeClass('active');
+                $('#master-data-page').addClass('active');
+            });
+            
+            $('#add-supplier-btn').click(function(e) {
+                e.preventDefault();
+                $('#masterTabs .nav-link').removeClass('active');
+                $('#supplier-tab').addClass('active');
+                $('#masterTabsContent .tab-pane').removeClass('show active');
+                $('#supplier').addClass('show active');
+                
+                $('.nav-item').removeClass('active');
+                $('.nav-item[data-page="master-data-page"]').addClass('active');
+                $('.page').removeClass('active');
+                $('#master-data-page').addClass('active');
+            });
+            
+            $('#add-package-btn').click(function(e) {
+                e.preventDefault();
+                $('#masterTabs .nav-link').removeClass('active');
+                $('#package-tab').addClass('active');
+                $('#masterTabsContent .tab-pane').removeClass('show active');
+                $('#package').addClass('show active');
+                
+                $('.nav-item').removeClass('active');
+                $('.nav-item[data-page="master-data-page"]').addClass('active');
+                $('.page').removeClass('active');
+                $('#master-data-page').addClass('active');
+            });
+            
+            // Generate QR Code
+            $('#bike-select').change(function() {
+                const bikeId = $(this).val();
+                if (bikeId) {
+                    const bike = bikes.find(b => b.id === bikeId);
+                    if (bike) {
+                        $('#qr-code-container').show();
+                        $('#qrcode').empty();
+                        
+                        // Generate QR Code using qrcode-generator library
+                        const qr = qrcode(0, 'M');
+                        qr.addData(bikeId);
+                        qr.make();
+                        
+                        $('#qrcode').html(qr.createImgTag(5));
+                        $('#qr-bike-name').text(bike.name);
+                    }
+                } else {
+                    $('#qr-code-container').hide();
+                }
+            });
+            
+            // Download QR Code
+            $('#download-qr').click(function() {
+                const img = document.querySelector('#qrcode img');
+                if (img) {
+                    const link = document.createElement('a');
+                    link.download = `qr-${$('#bike-select option:selected').text().replace(/\s+/g, '-')}.png`;
+                    link.href = img.src;
+                    link.click();
+                }
+            });
+            
+            // QR Code Scanning
+            let stream = null;
+            
+            // Camera scan
+            $('#camera-scan-btn').click(function() {
+                startCameraScan();
+            });
+            
+            // Upload scan
+            $('#upload-scan-btn').click(function() {
+                $('#file-input').click();
+            });
+            
+            $('#file-input').change(function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    scanQRFromImage(file);
+                }
+            });
+            
+            // Stop camera
+            $('#stop-camera-btn').click(function() {
+                stopCamera();
+            });
+            
+            // Export data
+            $('#export-btn').click(function() {
+                exportData();
+            });
+            
+            // Initialize master data lists
+            loadTypeList();
+            loadSizeList();
+            loadSupplierList();
+            loadPackageList();
+        });
+        
+        // Function to load master data to forms
+        function loadMasterDataToForms() {
+            // Load types
+            $('#bike-type').html('<option value="">Pilih Tipe</option>');
+            masterData.types.forEach(type => {
+                $('#bike-type').append(`<option value="${type}">${type}</option>`);
+            });
+            
+            // Load sizes
+            $('#bike-size').html('<option value="">Pilih Ukuran</option>');
+            masterData.sizes.forEach(size => {
+                $('#bike-size').append(`<option value="${size}">${size}</option>`);
+            });
+            
+            // Load suppliers
+            $('#bike-supplier').html('<option value="">Pilih Supplier</option>');
+            masterData.suppliers.forEach(supplier => {
+                $('#bike-supplier').append(`<option value="${supplier}">${supplier}</option>`);
+            });
+            
+            // Load packages
+            $('#bike-package').html('<option value="">Pilih Kemasan</option>');
+            masterData.packages.forEach(pkg => {
+                $('#bike-package').append(`<option value="${pkg}">${pkg}</option>`);
+            });
+        }
+        
+        // Function to load bike list
+        function loadBikeList(status = 'all') {
+            $('#bike-list').empty();
+            
+            let filteredBikes = bikes;
+            if (status !== 'all') {
+                filteredBikes = bikes.filter(bike => bike.status === status);
+            }
+            
+            if (filteredBikes.length === 0) {
+                $('#bike-list').html('<div class="text-center text-muted py-4">Tidak ada sepeda</div>');
+                return;
+            }
+            
+            filteredBikes.forEach(bike => {
+                let statusBadge = '';
+                let actions = '';
+                
+                if (bike.status === 'unassembled') {
+                    statusBadge = '<span class="status-badge status-unassembled">Belum Rakit</span>';
+                    actions = `
+                        <button class="btn btn-sm btn-success assemble-btn" data-id="${bike.id}">
+                            <i class="fas fa-tools me-1"></i> Tandai Rakit
+                        </button>
+                    `;
+                } else if (bike.status === 'assembled') {
+                    statusBadge = '<span class="status-badge status-assembled">Ready Jual</span>';
+                    actions = `
+                        <button class="btn btn-sm btn-danger sell-btn" data-id="${bike.id}">
+                            <i class="fas fa-shopping-cart me-1"></i> Tandai Terjual
+                        </button>
+                    `;
+                } else if (bike.status === 'sold') {
+                    statusBadge = '<span class="status-badge status-sold">Terjual</span>';
+                    actions = '<span class="text-muted">Terjual</span>';
+                }
+                
+                $('#bike-list').append(`
+                    <div class="card bike-item">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h5 class="card-title">${bike.name}</h5>
+                                    <p class="card-text mb-1">
+                                        <small class="text-muted">
+                                            ${bike.type} - ${bike.size}<br>
+                                            Supplier: ${bike.supplier} | Kemasan: ${bike.package}
+                                        </small>
+                                    </p>
+                                    <p class="card-text mb-0">
+                                        <small>
+                                            Kedatangan: ${formatDate(bike.arrivalDate)}<br>
+                                            ${bike.assemblyDate ? `Rakit: ${formatDate(bike.assemblyDate)}<br>` : ''}
+                                            ${bike.soldDate ? `Terjual: ${formatDate(bike.soldDate)}` : ''}
+                                        </small>
+                                    </p>
+                                </div>
+                                ${statusBadge}
+                            </div>
+                            <div class="mt-3">
+                                ${actions}
+                                <button class="btn btn-sm btn-outline-secondary view-qr-btn" data-id="${bike.id}">
+                                    <i class="fas fa-qrcode me-1"></i> QR Code
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `);
+            });
+            
+            // Add event listeners for action buttons
+            $('.assemble-btn').click(function() {
+                const bikeId = $(this).data('id');
+                markAsAssembled(bikeId);
+            });
+            
+            $('.sell-btn').click(function() {
+                const bikeId = $(this).data('id');
+                markAsSold(bikeId);
+            });
+            
+            $('.view-qr-btn').click(function() {
+                const bikeId = $(this).data('id');
+                
+                // Navigate to QR page
+                $('.nav-item').removeClass('active');
+                $('.nav-item[data-page="qr-page"]').addClass('active');
+                $('.page').removeClass('active');
+                $('#qr-page').addClass('active');
+                
+                // Select the bike in dropdown
+                $('#bike-select').val(bikeId).trigger('change');
+                
+                // Switch to generate tab
+                $('#qrTabs .nav-link').removeClass('active');
+                $('#generate-tab').addClass('active');
+                $('#qrTabsContent .tab-pane').removeClass('show active');
+                $('#generate').addClass('show active');
+            });
+        }
+        
+        // Function to update dashboard counts
+        function updateDashboardCounts() {
+            const unassembledCount = bikes.filter(bike => bike.status === 'unassembled').length;
+            const assembledCount = bikes.filter(bike => bike.status === 'assembled').length;
+            const soldCount = bikes.filter(bike => bike.status === 'sold').length;
+            
+            $('#unassembled-count').text(unassembledCount);
+            $('#assembled-count').text(assembledCount);
+            $('#sold-count').text(soldCount);
+        }
+        
+        // Function to load bike select for QR generation
+        function loadBikeSelect() {
+            $('#bike-select').html('<option value="">Pilih sepeda untuk generate QR</option>');
+            bikes.forEach(bike => {
+                $('#bike-select').append(`<option value="${bike.id}">${bike.name}</option>`);
+            });
+        }
+        
+        // Function to mark bike as assembled
+        function markAsAssembled(bikeId) {
+            const bikeIndex = bikes.findIndex(bike => bike.id === bikeId);
+            if (bikeIndex !== -1) {
+                bikes[bikeIndex].status = 'assembled';
+                bikes[bikeIndex].assemblyDate = new Date().toISOString().split('T')[0];
+                localStorage.setItem('bikes', JSON.stringify(bikes));
+                
+                loadBikeList();
+                updateDashboardCounts();
+                alert('Sepeda berhasil ditandai sebagai sudah dirakit!');
+            }
+        }
+        
+        // Function to mark bike as sold
+        function markAsSold(bikeId) {
+            const bikeIndex = bikes.findIndex(bike => bike.id === bikeId);
+            if (bikeIndex !== -1) {
+                bikes[bikeIndex].status = 'sold';
+                bikes[bikeIndex].soldDate = new Date().toISOString().split('T')[0];
+                localStorage.setItem('bikes', JSON.stringify(bikes));
+                
+                loadBikeList();
+                updateDashboardCounts();
+                alert('Sepeda berhasil ditandai sebagai terjual!');
+            }
+        }
+        
+        // Function to start camera scan
+        function startCameraScan() {
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                $('#camera-container').show();
+                $('#camera-scan-btn').prop('disabled', true);
+                
+                navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+                    .then(function(mediaStream) {
+                        stream = mediaStream;
+                        const video = document.getElementById('camera-feed');
+                        video.srcObject = stream;
+                        
+                        // Start scanning for QR codes
+                        scanFromCamera(video);
+                    })
+                    .catch(function(err) {
+                        console.error('Error accessing camera:', err);
+                        $('#scan-result').html('<div class="alert alert-danger">Tidak dapat mengakses kamera. Pastikan Anda memberikan izin akses kamera.</div>');
+                        $('#camera-container').hide();
+                        $('#camera-scan-btn').prop('disabled', false);
+                    });
+            } else {
+                $('#scan-result').html('<div class="alert alert-warning">Browser tidak mendukung akses kamera.</div>');
+            }
+        }
+        
+        // Function to scan QR from camera
+        function scanFromCamera(video) {
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            
+            function scan() {
+                if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    
+                    const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+                    
+                    // Simple QR code detection by looking for patterns
+                    // This is a simplified approach - in a real app you'd use a proper QR library
+                    const qrCode = detectQRCode(imageData);
+                    
+                    if (qrCode) {
+                        const bikeId = qrCode;
+                        const bike = bikes.find(b => b.id === bikeId);
+                        
+                        if (bike) {
+                            $('#scan-result').html(`
+                                <div class="alert alert-success">
+                                    <h5>${bike.name}</h5>
+                                    <p class="mb-1">${bike.type} - ${bike.size}</p>
+                                    <p class="mb-1">Status: ${getStatusText(bike.status)}</p>
+                                    <p class="mb-0">Kedatangan: ${formatDate(bike.arrivalDate)}</p>
+                                </div>
+                            `);
+                            stopCamera();
+                        } else {
+                            $('#scan-result').html('<div class="alert alert-warning">Sepeda tidak ditemukan</div>');
+                        }
+                    }
+                }
+                
+                if (stream) {
+                    requestAnimationFrame(scan);
+                }
+            }
+            
+            scan();
+        }
+        
+        // Function to scan QR from image file
+        function scanQRFromImage(file) {
+            const img = new Image();
+            const url = URL.createObjectURL(file);
+            
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                canvas.width = img.width;
+                canvas.height = img.height;
+                context.drawImage(img, 0, 0);
+                
+                const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+                const qrCode = detectQRCode(imageData);
+                
+                if (qrCode) {
+                    const bikeId = qrCode;
+                    const bike = bikes.find(b => b.id === bikeId);
+                    
+                    if (bike) {
+                        $('#scan-result').html(`
+                            <div class="alert alert-success">
+                                <h5>${bike.name}</h5>
+                                <p class="mb-1">${bike.type} - ${bike.size}</p>
+                                <p class="mb-1">Status: ${getStatusText(bike.status)}</p>
+                                <p class="mb-0">Kedatangan: ${formatDate(bike.arrivalDate)}</p>
+                            </div>
+                        `);
+                    } else {
+                        $('#scan-result').html('<div class="alert alert-warning">Sepeda tidak ditemukan</div>');
+                    }
+                } else {
+                    $('#scan-result').html('<div class="alert alert-danger">Tidak dapat membaca QR code dari gambar.</div>');
+                }
+                
+                URL.revokeObjectURL(url);
+            };
+            
+            img.src = url;
+        }
+        
+        // Simplified QR code detection (for demo purposes)
+        // In a real application, you would use a proper QR code scanning library
+        function detectQRCode(imageData) {
+            // This is a mock implementation
+            // In reality, you would use a library like jsQR or similar
+            // For this demo, we'll just return a fake ID sometimes
+            if (Math.random() > 0.7) {
+                // Return a random bike ID for demo
+                return bikes.length > 0 ? bikes[Math.floor(Math.random() * bikes.length)].id : null;
+            }
+            return null;
+        }
+        
+        // Function to stop camera
+        function stopCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+            $('#camera-container').hide();
+            $('#camera-scan-btn').prop('disabled', false);
+        }
+        
+        // Function to export data
+        function exportData() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({
+                bikes: bikes,
+                masterData: masterData
+            }, null, 2));
+            
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", "inventaris-sepeda-backup.json");
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        }
+        
+        // Function to load type list
+        function loadTypeList() {
+            $('#type-list').empty();
+            masterData.types.forEach(type => {
+                $('#type-list').append(`
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        ${type}
+                        <button class="btn btn-sm btn-outline-danger delete-type" data-item="${type}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </li>
+                `);
+            });
+            
+            $('.delete-type').click(function() {
+                const item = $(this).data('item');
+                if (confirm(`Hapus tipe "${item}"?`)) {
+                    masterData.types = masterData.types.filter(t => t !== item);
+                    localStorage.setItem('masterData', JSON.stringify(masterData));
+                    loadMasterDataToForms();
+                    loadTypeList();
+                }
+            });
+        }
+        
+        // Function to load size list
+        function loadSizeList() {
+            $('#size-list').empty();
+            masterData.sizes.forEach(size => {
+                $('#size-list').append(`
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        ${size}
+                        <button class="btn btn-sm btn-outline-danger delete-size" data-item="${size}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </li>
+                `);
+            });
+            
+            $('.delete-size').click(function() {
+                const item = $(this).data('item');
+                if (confirm(`Hapus ukuran "${item}"?`)) {
+                    masterData.sizes = masterData.sizes.filter(s => s !== item);
+                    localStorage.setItem('masterData', JSON.stringify(masterData));
+                    loadMasterDataToForms();
+                    loadSizeList();
+                }
+            });
+        }
+        
+        // Function to load supplier list
+        function loadSupplierList() {
+            $('#supplier-list').empty();
+            masterData.suppliers.forEach(supplier => {
+                $('#supplier-list').append(`
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        ${supplier}
+                        <button class="btn btn-sm btn-outline-danger delete-supplier" data-item="${supplier}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </li>
+                `);
+            });
+            
+            $('.delete-supplier').click(function() {
+                const item = $(this).data('item');
+                if (confirm(`Hapus supplier "${item}"?`)) {
+                    masterData.suppliers = masterData.suppliers.filter(s => s !== item);
+                    localStorage.setItem('masterData', JSON.stringify(masterData));
+                    loadMasterDataToForms();
+                    loadSupplierList();
+                }
+            });
+        }
+        
+        // Function to load package list
+        function loadPackageList() {
+            $('#package-list').empty();
+            masterData.packages.forEach(pkg => {
+                $('#package-list').append(`
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        ${pkg}
+                        <button class="btn btn-sm btn-outline-danger delete-package" data-item="${pkg}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </li>
+                `);
+            });
+            
+            $('.delete-package').click(function() {
+                const item = $(this).data('item');
+                if (confirm(`Hapus kemasan "${item}"?`)) {
+                    masterData.packages = masterData.packages.filter(p => p !== item);
+                    localStorage.setItem('masterData', JSON.stringify(masterData));
+                    loadMasterDataToForms();
+                    loadPackageList();
+                }
+            });
+        }
+        
+        // Helper function to format date
+        function formatDate(dateString) {
+            if (!dateString) return '-';
+            const options = { day: '2-digit', month: '2-digit', year: 'numeric' };
+            return new Date(dateString).toLocaleDateString('id-ID', options);
+        }
+        
+        // Helper function to get status text
+        function getStatusText(status) {
+            switch(status) {
+                case 'unassembled': return 'Belum Rakit';
+                case 'assembled': return 'Ready Jual';
+                case 'sold': return 'Terjual';
+                default: return status;
+            }
+        }
+    </script>
 </body>
 </html>
