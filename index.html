@@ -165,7 +165,7 @@
         }
         
         .qr-code-small {
-            width: 30%;
+            width: 80px;
             flex-shrink: 0;
         }
         
@@ -178,13 +178,17 @@
             flex: 1;
             text-align: left;
             font-size: 11px;
-            line-height: 1.3;
+            line-height: 1.2;
         }
         
         .qr-info strong {
             display: block;
             margin-bottom: 3px;
             font-size: 12px;
+        }
+        
+        .qr-info div {
+            margin-bottom: 2px;
         }
         
         @media print {
@@ -205,7 +209,7 @@
         
         .printable-qr {
             width: 58mm;
-            padding: 5px;
+            padding: 8px;
             border: 1px dashed #ccc;
             margin: 10px auto;
             background: white;
@@ -257,27 +261,6 @@
             position: relative;
         }
         
-        .bike-image {
-            width: 100%;
-            height: 150px;
-            object-fit: cover;
-            border-radius: 8px;
-            margin-bottom: 10px;
-        }
-        
-        .image-placeholder {
-            width: 100%;
-            height: 150px;
-            background-color: #f8f9fa;
-            border: 2px dashed #dee2e6;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #6c757d;
-            margin-bottom: 10px;
-        }
-        
         .action-buttons {
             display: flex;
             gap: 5px;
@@ -287,13 +270,7 @@
         .action-buttons .btn {
             flex: 1;
             min-width: 120px;
-        }
-        
-        .photo-preview {
-            max-width: 100%;
-            max-height: 200px;
-            margin-top: 10px;
-            border-radius: 8px;
+            font-size: 0.8rem;
         }
     </style>
 </head>
@@ -347,27 +324,22 @@
                 </div>
                 <div class="modal-body">
                     <form id="assembly-form">
+                        <input type="hidden" id="assembly-bike-ids">
+                        <div class="mb-3">
+                            <label for="assembly-count" class="form-label">Jumlah yang Dirakit</label>
+                            <input type="number" class="form-control" id="assembly-count" min="1" required>
+                        </div>
                         <div class="mb-3">
                             <label for="assembly-date" class="form-label">Tanggal Perakitan</label>
                             <input type="date" class="form-control" id="assembly-date" required>
                         </div>
-                        
                         <div class="mb-3">
-                            <label for="assembly-assembler" class="form-label">Nama Perakit</label>
-                            <select class="form-select" id="assembly-assembler" required>
+                            <label for="assembler" class="form-label">Nama Perakit</label>
+                            <select class="form-select" id="assembler" required>
                                 <option value="">Pilih Perakit</option>
                             </select>
-                            <div class="form-text">
-                                <a href="#" id="add-assembler-btn">+ Tambah perakit baru</a>
-                            </div>
                         </div>
-                        
-                        <div class="mb-3">
-                            <label for="assembly-quantity" class="form-label">Jumlah yang Dirakit</label>
-                            <input type="number" class="form-control" id="assembly-quantity" value="1" min="1" required>
-                        </div>
-                        
-                        <button type="submit" class="btn btn-primary w-100">Simpan Perakitan</button>
+                        <button type="submit" class="btn btn-success w-100">Simpan Perakitan</button>
                     </form>
                 </div>
             </div>
@@ -384,17 +356,16 @@
                 </div>
                 <div class="modal-body">
                     <form id="sale-form">
+                        <input type="hidden" id="sale-bike-ids">
+                        <div class="mb-3">
+                            <label for="sale-count" class="form-label">Jumlah yang Terjual</label>
+                            <input type="number" class="form-control" id="sale-count" min="1" required>
+                        </div>
                         <div class="mb-3">
                             <label for="sale-date" class="form-label">Tanggal Penjualan</label>
                             <input type="date" class="form-control" id="sale-date" required>
                         </div>
-                        
-                        <div class="mb-3">
-                            <label for="sale-quantity" class="form-label">Jumlah yang Terjual</label>
-                            <input type="number" class="form-control" id="sale-quantity" value="1" min="1" required>
-                        </div>
-                        
-                        <button type="submit" class="btn btn-primary w-100">Simpan Penjualan</button>
+                        <button type="submit" class="btn btn-danger w-100">Simpan Penjualan</button>
                     </form>
                 </div>
             </div>
@@ -412,48 +383,38 @@
                 <div class="modal-body">
                     <form id="edit-bike-form">
                         <input type="hidden" id="edit-bike-id">
-                        
                         <div class="mb-3">
                             <label for="edit-bike-name" class="form-label">Nama Sepeda</label>
                             <input type="text" class="form-control" id="edit-bike-name" required>
                         </div>
-                        
                         <div class="mb-3">
                             <label for="edit-bike-type" class="form-label">Tipe</label>
                             <select class="form-select" id="edit-bike-type" required>
                                 <option value="">Pilih Tipe</option>
                             </select>
                         </div>
-                        
                         <div class="mb-3">
                             <label for="edit-bike-size" class="form-label">Ukuran</label>
                             <select class="form-select" id="edit-bike-size" required>
                                 <option value="">Pilih Ukuran</option>
                             </select>
                         </div>
-                        
                         <div class="mb-3">
                             <label for="edit-bike-supplier" class="form-label">Supplier</label>
                             <select class="form-select" id="edit-bike-supplier" required>
                                 <option value="">Pilih Supplier</option>
                             </select>
                         </div>
-                        
                         <div class="mb-3">
                             <label for="edit-bike-package" class="form-label">Kemasan</label>
                             <select class="form-select" id="edit-bike-package" required>
                                 <option value="">Pilih Kemasan</option>
                             </select>
                         </div>
-                        
                         <div class="mb-3">
-                            <label for="edit-bike-photo" class="form-label">Foto Sepeda</label>
-                            <input type="file" class="form-control" id="edit-bike-photo" accept="image/*">
-                            <div class="form-text">Unggah foto sepeda (opsional)</div>
+                            <label for="edit-arrival-date" class="form-label">Tanggal Kedatangan</label>
+                            <input type="date" class="form-control" id="edit-arrival-date" required>
                         </div>
-                        
-                        <div id="edit-photo-preview-container"></div>
-                        
                         <button type="submit" class="btn btn-primary w-100">Simpan Perubahan</button>
                     </form>
                 </div>
@@ -535,7 +496,7 @@
                 <form id="bike-form">
                     <div class="mb-3">
                         <label for="bike-name" class="form-label">Nama Sepeda</label>
-                        <input type="text" class="form-control" id="bike-name" required style="text-transform: uppercase;">
+                        <input type="text" class="form-control" id="bike-name" required>
                     </div>
                     
                     <div class="mb-3">
@@ -589,14 +550,6 @@
                         <input type="number" class="form-control" id="package-quantity" value="1" min="1" required>
                         <div class="form-text">Total kemasan yang diterima</div>
                     </div>
-                    
-                    <div class="mb-3">
-                        <label for="bike-photo" class="form-label">Foto Sepeda</label>
-                        <input type="file" class="form-control" id="bike-photo" accept="image/*">
-                        <div class="form-text">Unggah foto sepeda (opsional)</div>
-                    </div>
-                    
-                    <div id="photo-preview-container"></div>
                     
                     <div class="mb-3">
                         <label for="arrival-date" class="form-label">Tanggal Kedatangan</label>
@@ -743,7 +696,7 @@
                 
                 <div class="tab-pane fade" id="assembler" role="tabpanel">
                     <div class="input-group mb-3">
-                        <input type="text" class="form-control" id="new-assembler" placeholder="Tambah perakit baru">
+                        <input type="text" class="form-control" id="new-assembler" placeholder="Tambah nama perakit">
                         <button class="btn btn-primary" type="button" id="save-assembler">Tambah</button>
                     </div>
                     <ul class="list-group" id="assembler-list">
@@ -788,7 +741,7 @@
             sizes: ['16"', '18"', '20"', '24"', '26"', '27.5"', '29"'],
             suppliers: ['Supplier A', 'Supplier B', 'Supplier C'],
             packages: ['Kardus', 'Plastik', 'Kayu'],
-            assemblers: ['Andi', 'Budi', 'Citra']
+            assemblers: ['Ahmad', 'Budi', 'Citra']
         };
 
         // Initialize App
@@ -809,7 +762,7 @@
             loadBikeList();
             updateDashboardCounts();
             loadBikeSelect();
-            loadAssemblersToForm();
+            loadAssemblerSelect();
             
             // Navigation
             $('.nav-item').click(function() {
@@ -820,7 +773,7 @@
                 $('.page').removeClass('active');
                 $('#' + pageId).addClass('active');
                 
-                // Initialize tabs when page is shown
+                // Initialize tabs when switching to QR or Master Data page
                 if (pageId === 'qr-page') {
                     initializeQRTabs();
                 } else if (pageId === 'master-data-page') {
@@ -859,29 +812,11 @@
                 const packageQuantity = parseInt($('#package-quantity').val());
                 const totalUnits = unitsPerPackage * packageQuantity;
                 
-                // Get photo data if exists
-                const photoFile = $('#bike-photo')[0].files[0];
-                let photoData = null;
-                
-                if (photoFile) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        photoData = e.target.result;
-                        saveBikes(unitsPerPackage, packageQuantity, totalUnits, photoData);
-                    };
-                    reader.readAsDataURL(photoFile);
-                } else {
-                    saveBikes(unitsPerPackage, packageQuantity, totalUnits, null);
-                }
-            });
-            
-            // Function to save bikes after photo processing
-            function saveBikes(unitsPerPackage, packageQuantity, totalUnits, photoData) {
                 // Create multiple bike entries based on total units
                 for (let i = 0; i < totalUnits; i++) {
                     const bikeData = {
                         id: Date.now().toString() + '-' + i,
-                        name: $('#bike-name').val().toUpperCase(),
+                        name: $('#bike-name').val(),
                         type: $('#bike-type').val(),
                         size: $('#bike-size').val(),
                         supplier: $('#bike-supplier').val(),
@@ -894,8 +829,7 @@
                         assemblyDate: null,
                         assembler: null,
                         soldDate: null,
-                        status: 'unassembled',
-                        photo: photoData
+                        status: 'unassembled'
                     };
                     
                     bikes.push(bikeData);
@@ -908,7 +842,6 @@
                 $('#units-per-package').val(1);
                 $('#package-quantity').val(1);
                 $('#arrival-date').val(today);
-                $('#photo-preview-container').empty();
                 
                 // Show success message
                 alert(`Berhasil menambahkan ${totalUnits} unit sepeda!`);
@@ -923,32 +856,6 @@
                 $('.nav-item[data-page="dashboard-page"]').addClass('active');
                 $('.page').removeClass('active');
                 $('#dashboard-page').addClass('active');
-            }
-            
-            // Photo preview for add form
-            $('#bike-photo').change(function() {
-                const file = this.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        $('#photo-preview-container').html(`<img src="${e.target.result}" class="photo-preview" alt="Preview">`);
-                    };
-                    reader.readAsDataURL(file);
-                } else {
-                    $('#photo-preview-container').empty();
-                }
-            });
-            
-            // Photo preview for edit form
-            $('#edit-bike-photo').change(function() {
-                const file = this.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        $('#edit-photo-preview-container').html(`<img src="${e.target.result}" class="photo-preview" alt="Preview">`);
-                    };
-                    reader.readAsDataURL(file);
-                }
             });
             
             // Add master data items
@@ -1002,7 +909,7 @@
                     masterData.assemblers.push(newAssembler);
                     localStorage.setItem('masterData', JSON.stringify(masterData));
                     $('#new-assembler').val('');
-                    loadAssemblersToForm();
+                    loadAssemblerSelect();
                     loadAssemblerList();
                 }
             });
@@ -1060,19 +967,6 @@
                 $('#master-data-page').addClass('active');
             });
             
-            $('#add-assembler-btn').click(function(e) {
-                e.preventDefault();
-                $('#masterTabs .nav-link').removeClass('active');
-                $('#assembler-tab').addClass('active');
-                $('#masterTabsContent .tab-pane').removeClass('show active');
-                $('#assembler').addClass('show active');
-                
-                $('.nav-item').removeClass('active');
-                $('.nav-item[data-page="master-data-page"]').addClass('active');
-                $('.page').removeClass('active');
-                $('#master-data-page').addClass('active');
-            });
-            
             // Generate QR Code
             $('#bike-select').change(function() {
                 const bikeId = $(this).val();
@@ -1120,6 +1014,102 @@
                     link.download = `qr-${bikeName.replace(/\s+/g, '-')}.png`;
                     link.href = img.src;
                     link.click();
+                }
+            });
+            
+            // Assembly form submission
+            $('#assembly-form').submit(function(e) {
+                e.preventDefault();
+                
+                const bikeIds = JSON.parse($('#assembly-bike-ids').val());
+                const assemblyCount = parseInt($('#assembly-count').val());
+                const assemblyDate = $('#assembly-date').val();
+                const assembler = $('#assembler').val();
+                
+                // Mark bikes as assembled
+                let count = 0;
+                bikeIds.forEach(bikeId => {
+                    if (count < assemblyCount) {
+                        const bikeIndex = bikes.findIndex(bike => bike.id === bikeId && bike.status === 'unassembled');
+                        if (bikeIndex !== -1) {
+                            bikes[bikeIndex].status = 'assembled';
+                            bikes[bikeIndex].assemblyDate = assemblyDate;
+                            bikes[bikeIndex].assembler = assembler;
+                            count++;
+                        }
+                    }
+                });
+                
+                localStorage.setItem('bikes', JSON.stringify(bikes));
+                $('#assemblyModal').modal('hide');
+                
+                // Show success message
+                alert(`Berhasil menandai ${count} unit sepeda sebagai sudah dirakit!`);
+                
+                // Update UI
+                loadBikeList();
+                updateDashboardCounts();
+                loadBikeSelect();
+            });
+            
+            // Sale form submission
+            $('#sale-form').submit(function(e) {
+                e.preventDefault();
+                
+                const bikeIds = JSON.parse($('#sale-bike-ids').val());
+                const saleCount = parseInt($('#sale-count').val());
+                const saleDate = $('#sale-date').val();
+                
+                // Mark bikes as sold
+                let count = 0;
+                bikeIds.forEach(bikeId => {
+                    if (count < saleCount) {
+                        const bikeIndex = bikes.findIndex(bike => bike.id === bikeId && bike.status === 'assembled');
+                        if (bikeIndex !== -1) {
+                            bikes[bikeIndex].status = 'sold';
+                            bikes[bikeIndex].soldDate = saleDate;
+                            count++;
+                        }
+                    }
+                });
+                
+                localStorage.setItem('bikes', JSON.stringify(bikes));
+                $('#saleModal').modal('hide');
+                
+                // Show success message
+                alert(`Berhasil menandai ${count} unit sepeda sebagai terjual!`);
+                
+                // Update UI
+                loadBikeList();
+                updateDashboardCounts();
+                loadBikeSelect();
+            });
+            
+            // Edit bike form submission
+            $('#edit-bike-form').submit(function(e) {
+                e.preventDefault();
+                
+                const bikeId = $('#edit-bike-id').val();
+                const bikeIndex = bikes.findIndex(bike => bike.id === bikeId);
+                
+                if (bikeIndex !== -1) {
+                    bikes[bikeIndex].name = $('#edit-bike-name').val();
+                    bikes[bikeIndex].type = $('#edit-bike-type').val();
+                    bikes[bikeIndex].size = $('#edit-bike-size').val();
+                    bikes[bikeIndex].supplier = $('#edit-bike-supplier').val();
+                    bikes[bikeIndex].package = $('#edit-bike-package').val();
+                    bikes[bikeIndex].arrivalDate = $('#edit-arrival-date').val();
+                    
+                    localStorage.setItem('bikes', JSON.stringify(bikes));
+                    $('#editBikeModal').modal('hide');
+                    
+                    // Show success message
+                    alert('Data sepeda berhasil diperbarui!');
+                    
+                    // Update UI
+                    loadBikeList();
+                    updateDashboardCounts();
+                    loadBikeSelect();
                 }
             });
             
@@ -1176,100 +1166,6 @@
                 stopCamera();
             });
             
-            // Assembly form submission
-            $('#assembly-form').submit(function(e) {
-                e.preventDefault();
-                
-                const bikeIds = $('#assembly-form').data('bikeIds');
-                const quantity = parseInt($('#assembly-quantity').val());
-                const assemblyDate = $('#assembly-date').val();
-                const assembler = $('#assembly-assembler').val();
-                
-                // Mark bikes as assembled
-                let assembledCount = 0;
-                bikeIds.forEach(bikeId => {
-                    const bikeIndex = bikes.findIndex(bike => bike.id === bikeId && bike.status === 'unassembled');
-                    if (bikeIndex !== -1 && assembledCount < quantity) {
-                        bikes[bikeIndex].status = 'assembled';
-                        bikes[bikeIndex].assemblyDate = assemblyDate;
-                        bikes[bikeIndex].assembler = assembler;
-                        assembledCount++;
-                    }
-                });
-                
-                localStorage.setItem('bikes', JSON.stringify(bikes));
-                $('#assemblyModal').modal('hide');
-                loadBikeList();
-                updateDashboardCounts();
-                
-                alert(`Berhasil menandai ${assembledCount} unit sebagai sudah dirakit!`);
-            });
-            
-            // Sale form submission
-            $('#sale-form').submit(function(e) {
-                e.preventDefault();
-                
-                const bikeIds = $('#sale-form').data('bikeIds');
-                const quantity = parseInt($('#sale-quantity').val());
-                const saleDate = $('#sale-date').val();
-                
-                // Mark bikes as sold
-                let soldCount = 0;
-                bikeIds.forEach(bikeId => {
-                    const bikeIndex = bikes.findIndex(bike => bike.id === bikeId && bike.status === 'assembled');
-                    if (bikeIndex !== -1 && soldCount < quantity) {
-                        bikes[bikeIndex].status = 'sold';
-                        bikes[bikeIndex].soldDate = saleDate;
-                        soldCount++;
-                    }
-                });
-                
-                localStorage.setItem('bikes', JSON.stringify(bikes));
-                $('#saleModal').modal('hide');
-                loadBikeList();
-                updateDashboardCounts();
-                
-                alert(`Berhasil menandai ${soldCount} unit sebagai terjual!`);
-            });
-            
-            // Edit bike form submission
-            $('#edit-bike-form').submit(function(e) {
-                e.preventDefault();
-                
-                const bikeId = $('#edit-bike-id').val();
-                const bikeIndex = bikes.findIndex(bike => bike.id === bikeId);
-                
-                if (bikeIndex !== -1) {
-                    // Update bike data
-                    bikes[bikeIndex].name = $('#edit-bike-name').val().toUpperCase();
-                    bikes[bikeIndex].type = $('#edit-bike-type').val();
-                    bikes[bikeIndex].size = $('#edit-bike-size').val();
-                    bikes[bikeIndex].supplier = $('#edit-bike-supplier').val();
-                    bikes[bikeIndex].package = $('#edit-bike-package').val();
-                    
-                    // Update photo if provided
-                    const photoFile = $('#edit-bike-photo')[0].files[0];
-                    if (photoFile) {
-                        const reader = new FileReader();
-                        reader.onload = function(e) {
-                            bikes[bikeIndex].photo = e.target.result;
-                            localStorage.setItem('bikes', JSON.stringify(bikes));
-                            $('#editBikeModal').modal('hide');
-                            loadBikeList();
-                            loadBikeSelect();
-                            alert('Data sepeda berhasil diperbarui!');
-                        };
-                        reader.readAsDataURL(photoFile);
-                    } else {
-                        localStorage.setItem('bikes', JSON.stringify(bikes));
-                        $('#editBikeModal').modal('hide');
-                        loadBikeList();
-                        loadBikeSelect();
-                        alert('Data sepeda berhasil diperbarui!');
-                    }
-                }
-            });
-            
             // Export data
             $('#export-btn').click(function() {
                 exportData();
@@ -1285,19 +1181,27 @@
         
         // Function to initialize QR tabs
         function initializeQRTabs() {
-            // Ensure tab content is properly shown
-            $('#qrTabs .nav-link').on('shown.bs.tab', function(e) {
-                const target = $(e.target).data('bs-target');
-                $(target).addClass('show active');
+            // Force Bootstrap to initialize tabs
+            const triggerTabList = [].slice.call(document.querySelectorAll('#qrTabs button'));
+            triggerTabList.forEach(function (triggerEl) {
+                var tabTrigger = new bootstrap.Tab(triggerEl);
+                triggerEl.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    tabTrigger.show();
+                });
             });
         }
         
-        // Function to initialize master tabs
+        // Function to initialize master data tabs
         function initializeMasterTabs() {
-            // Ensure tab content is properly shown
-            $('#masterTabs .nav-link').on('shown.bs.tab', function(e) {
-                const target = $(e.target).data('bs-target');
-                $(target).addClass('show active');
+            // Force Bootstrap to initialize tabs
+            const triggerTabList = [].slice.call(document.querySelectorAll('#masterTabs button'));
+            triggerTabList.forEach(function (triggerEl) {
+                var tabTrigger = new bootstrap.Tab(triggerEl);
+                triggerEl.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    tabTrigger.show();
+                });
             });
         }
         
@@ -1328,11 +1232,11 @@
             });
         }
         
-        // Function to load assemblers to form
-        function loadAssemblersToForm() {
-            $('#assembly-assembler').html('<option value="">Pilih Perakit</option>');
+        // Function to load assembler select
+        function loadAssemblerSelect() {
+            $('#assembler').html('<option value="">Pilih Perakit</option>');
             masterData.assemblers.forEach(assembler => {
-                $('#assembly-assembler').append(`<option value="${assembler}">${assembler}</option>`);
+                $('#assembler').append(`<option value="${assembler}">${assembler}</option>`);
             });
         }
         
@@ -1371,12 +1275,14 @@
                         package: bike.package,
                         status: bike.status,
                         arrivalDate: bike.arrivalDate,
+                        assemblyDate: bike.assemblyDate,
+                        assembler: bike.assembler,
+                        soldDate: bike.soldDate,
                         unitsPerPackage: bike.unitsPerPackage,
                         packageQuantity: bike.packageQuantity,
                         totalUnits: bike.totalUnits,
                         count: 0,
-                        bikeIds: [],
-                        photo: bike.photo
+                        bikeIds: []
                     };
                 }
                 bikeGroups[key].count++;
@@ -1395,14 +1301,14 @@
                 if (group.status === 'unassembled') {
                     statusBadge = '<span class="status-badge status-unassembled">Belum Rakit</span>';
                     actions = `
-                        <button class="btn btn-sm btn-success assemble-btn" data-ids='${JSON.stringify(group.bikeIds)}'>
+                        <button class="btn btn-sm btn-success assemble-btn" data-ids='${JSON.stringify(group.bikeIds)}' data-count="${group.count}">
                             <i class="fas fa-tools me-1"></i> Tandai Rakit
                         </button>
                     `;
                 } else if (group.status === 'assembled') {
                     statusBadge = '<span class="status-badge status-assembled">Sudah Rakit</span>';
                     actions = `
-                        <button class="btn btn-sm btn-danger sell-btn" data-ids='${JSON.stringify(group.bikeIds)}'>
+                        <button class="btn btn-sm btn-danger sell-btn" data-ids='${JSON.stringify(group.bikeIds)}' data-count="${group.count}">
                             <i class="fas fa-shopping-cart me-1"></i> Tandai Terjual
                         </button>
                     `;
@@ -1410,22 +1316,10 @@
                     statusBadge = '<span class="status-badge status-sold">Terjual</span>';
                 }
                 
-                const assemblyInfo = group.status === 'assembled' || group.status === 'sold' ? 
-                    `<br>Rakit: ${formatDate(group.assemblyDate)} oleh ${group.assembler}` : '';
-                    
-                const saleInfo = group.status === 'sold' ? 
-                    `<br>Terjual: ${formatDate(group.soldDate)}` : '';
-                
                 $('#bike-list').append(`
                     <div class="card bike-item">
                         <div class="card-body bike-card-content">
                             ${group.count > 1 ? `<div class="unit-count-badge">${group.count}</div>` : ''}
-                            ${group.photo ? 
-                                `<img src="${group.photo}" class="bike-image" alt="${group.name}">` : 
-                                `<div class="image-placeholder">
-                                    <i class="fas fa-bicycle fa-2x"></i>
-                                </div>`
-                            }
                             <div class="d-flex justify-content-between align-items-start">
                                 <div>
                                     <h5 class="card-title">${group.name}</h5>
@@ -1438,10 +1332,9 @@
                                     </p>
                                     <p class="card-text mb-0">
                                         <small>
-                                            Kedatangan: ${formatDate(group.arrivalDate)}
-                                            ${assemblyInfo}
-                                            ${saleInfo}
-                                            <br>Total Unit: ${group.count}
+                                            Kedatangan: ${formatDate(group.arrivalDate)}<br>
+                                            ${group.assemblyDate ? `Rakit: ${formatDate(group.assemblyDate)} oleh ${group.assembler}<br>` : ''}
+                                            ${group.soldDate ? `Terjual: ${formatDate(group.soldDate)}` : ''}
                                         </small>
                                     </p>
                                 </div>
@@ -1449,11 +1342,11 @@
                             </div>
                             <div class="mt-3 action-buttons">
                                 ${actions}
-                                <button class="btn btn-sm btn-outline-secondary view-qr-btn" data-id="${group.bikeIds[0]}">
-                                    <i class="fas fa-qrcode me-1"></i> QR Code
-                                </button>
                                 <button class="btn btn-sm btn-outline-primary edit-btn" data-id="${group.bikeIds[0]}">
                                     <i class="fas fa-edit me-1"></i> Edit
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary view-qr-btn" data-id="${group.bikeIds[0]}">
+                                    <i class="fas fa-qrcode me-1"></i> QR Code
                                 </button>
                             </div>
                         </div>
@@ -1464,18 +1357,35 @@
             // Add event listeners for action buttons
             $('.assemble-btn').click(function() {
                 const bikeIds = JSON.parse($(this).data('ids'));
-                $('#assembly-form').data('bikeIds', bikeIds);
-                $('#assembly-quantity').val(1);
-                $('#assembly-quantity').attr('max', bikeIds.length);
+                const maxCount = $(this).data('count');
+                $('#assembly-bike-ids').val(JSON.stringify(bikeIds));
+                $('#assembly-count').val(maxCount).attr('max', maxCount);
                 $('#assemblyModal').modal('show');
             });
             
             $('.sell-btn').click(function() {
                 const bikeIds = JSON.parse($(this).data('ids'));
-                $('#sale-form').data('bikeIds', bikeIds);
-                $('#sale-quantity').val(1);
-                $('#sale-quantity').attr('max', bikeIds.length);
+                const maxCount = $(this).data('count');
+                $('#sale-bike-ids').val(JSON.stringify(bikeIds));
+                $('#sale-count').val(maxCount).attr('max', maxCount);
                 $('#saleModal').modal('show');
+            });
+            
+            $('.edit-btn').click(function() {
+                const bikeId = $(this).data('id');
+                const bike = bikes.find(b => b.id === bikeId);
+                
+                if (bike) {
+                    $('#edit-bike-id').val(bike.id);
+                    $('#edit-bike-name').val(bike.name);
+                    $('#edit-bike-type').val(bike.type);
+                    $('#edit-bike-size').val(bike.size);
+                    $('#edit-bike-supplier').val(bike.supplier);
+                    $('#edit-bike-package').val(bike.package);
+                    $('#edit-arrival-date').val(bike.arrivalDate);
+                    
+                    $('#editBikeModal').modal('show');
+                }
             });
             
             $('.view-qr-btn').click(function() {
@@ -1495,29 +1405,6 @@
                 $('#generate-tab').addClass('active');
                 $('#qrTabsContent .tab-pane').removeClass('show active');
                 $('#generate').addClass('show active');
-            });
-            
-            $('.edit-btn').click(function() {
-                const bikeId = $(this).data('id');
-                const bike = bikes.find(b => b.id === bikeId);
-                
-                if (bike) {
-                    $('#edit-bike-id').val(bike.id);
-                    $('#edit-bike-name').val(bike.name);
-                    $('#edit-bike-type').val(bike.type);
-                    $('#edit-bike-size').val(bike.size);
-                    $('#edit-bike-supplier').val(bike.supplier);
-                    $('#edit-bike-package').val(bike.package);
-                    
-                    // Show photo if exists
-                    if (bike.photo) {
-                        $('#edit-photo-preview-container').html(`<img src="${bike.photo}" class="photo-preview" alt="Preview">`);
-                    } else {
-                        $('#edit-photo-preview-container').empty();
-                    }
-                    
-                    $('#editBikeModal').modal('show');
-                }
             });
         }
         
@@ -1888,7 +1775,7 @@
                 if (confirm(`Hapus perakit "${item}"?`)) {
                     masterData.assemblers = masterData.assemblers.filter(a => a !== item);
                     localStorage.setItem('masterData', JSON.stringify(masterData));
-                    loadAssemblersToForm();
+                    loadAssemblerSelect();
                     loadAssemblerList();
                 }
             });
