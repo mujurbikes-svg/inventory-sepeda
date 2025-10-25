@@ -330,6 +330,23 @@
             background-color: var(--primary-color);
             color: white;
         }
+        
+        /* Fix untuk tab content */
+        .tab-pane {
+            display: none;
+        }
+        
+        .tab-pane.active {
+            display: block;
+        }
+        
+        .tab-content > .tab-pane {
+            display: none;
+        }
+        
+        .tab-content > .active {
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -837,33 +854,13 @@
             loadBikeSelect();
             loadAssemblers();
             
+            // Initialize Bootstrap tabs
+            initializeTabs();
+            
             // Navigation - Fixed version
             $('.bottom-nav .nav-item').click(function() {
-                $('.bottom-nav .nav-item').removeClass('active');
-                $(this).addClass('active');
-                
                 const pageId = $(this).data('page');
-                $('.page').removeClass('active');
-                $('#' + pageId).addClass('active');
-            });
-            
-            // Initialize Bootstrap tabs dengan event handler yang benar
-            $('#qrTabs .nav-link').click(function(e) {
-                e.preventDefault();
-                const target = $(this).data('bs-target');
-                $('#qrTabs .nav-link').removeClass('active');
-                $(this).addClass('active');
-                $('#qrTabsContent .tab-pane').removeClass('show active');
-                $(target).addClass('show active');
-            });
-            
-            $('#masterTabs .nav-link').click(function(e) {
-                e.preventDefault();
-                const target = $(this).data('bs-target');
-                $('#masterTabs .nav-link').removeClass('active');
-                $(this).addClass('active');
-                $('#masterTabsContent .tab-pane').removeClass('show active');
-                $(target).addClass('show active');
+                navigateToPage(pageId);
             });
             
             // Filter bikes by status
@@ -905,315 +902,87 @@
             // Add bike form submission
             $('#bike-form').submit(function(e) {
                 e.preventDefault();
-                
-                const unitsPerPackage = parseInt($('#units-per-package').val());
-                const packageQuantity = parseInt($('#package-quantity').val());
-                const totalUnits = unitsPerPackage * packageQuantity;
-                const bikeImage = $('#image-preview').attr('src') || '';
-                
-                // Create multiple bike entries based on total units
-                for (let i = 0; i < totalUnits; i++) {
-                    const bikeData = {
-                        id: Date.now().toString() + '-' + i,
-                        name: $('#bike-name').val().toUpperCase(),
-                        type: $('#bike-type').val(),
-                        size: $('#bike-size').val(),
-                        supplier: $('#bike-supplier').val(),
-                        package: $('#bike-package').val(),
-                        unitsPerPackage: unitsPerPackage,
-                        packageQuantity: packageQuantity,
-                        unitNumber: i + 1,
-                        totalUnits: totalUnits,
-                        arrivalDate: $('#arrival-date').val(),
-                        assemblyDate: null,
-                        soldDate: null,
-                        status: 'unassembled',
-                        image: bikeImage,
-                        assembler: null
-                    };
-                    
-                    bikes.push(bikeData);
-                }
-                
-                localStorage.setItem('bikes', JSON.stringify(bikes));
-                
-                // Reset form
-                $('#bike-form')[0].reset();
-                $('#units-per-package').val(1);
-                $('#package-quantity').val(1);
-                $('#image-preview').hide();
-                $('#image-placeholder').show();
-                $('#arrival-date').val(today);
-                
-                // Show success message
-                alert(`Berhasil menambahkan ${totalUnits} unit sepeda!`);
-                
-                // Update UI
-                loadBikeList();
-                updateDashboardCounts();
-                loadBikeSelect();
-                
-                // Navigate to dashboard
-                $('.bottom-nav .nav-item').removeClass('active');
-                $('.bottom-nav .nav-item[data-page="dashboard-page"]').addClass('active');
-                $('.page').removeClass('active');
-                $('#dashboard-page').addClass('active');
+                addNewBike();
             });
             
             // Edit bike form submission
             $('#edit-bike-form').submit(function(e) {
                 e.preventDefault();
-                
-                const bikeId = $('#edit-bike-id').val();
-                const bikeIndex = bikes.findIndex(bike => bike.id === bikeId);
-                
-                if (bikeIndex !== -1) {
-                    bikes[bikeIndex].name = $('#edit-bike-name').val().toUpperCase();
-                    bikes[bikeIndex].type = $('#edit-bike-type').val();
-                    bikes[bikeIndex].size = $('#edit-bike-size').val();
-                    bikes[bikeIndex].supplier = $('#edit-bike-supplier').val();
-                    bikes[bikeIndex].package = $('#edit-bike-package').val();
-                    bikes[bikeIndex].arrivalDate = $('#edit-arrival-date').val();
-                    
-                    localStorage.setItem('bikes', JSON.stringify(bikes));
-                    
-                    $('#editBikeModal').modal('hide');
-                    loadBikeList();
-                    loadBikeSelect();
-                    alert('Data sepeda berhasil diupdate!');
-                }
+                updateBike();
             });
             
             // Assembly form submission
             $('#assembly-form').submit(function(e) {
                 e.preventDefault();
-                
-                const bikeIds = JSON.parse($('#assembly-bike-ids').val());
-                const assemblyCount = parseInt($('#assembly-count').val());
-                const assemblyDate = $('#assembly-date').val();
-                const assembler = $('#assembler').val();
-                
-                // Mark specified number of bikes as assembled
-                let count = 0;
-                bikeIds.forEach(bikeId => {
-                    if (count < assemblyCount) {
-                        const bikeIndex = bikes.findIndex(bike => bike.id === bikeId && bike.status === 'unassembled');
-                        if (bikeIndex !== -1) {
-                            bikes[bikeIndex].status = 'assembled';
-                            bikes[bikeIndex].assemblyDate = assemblyDate;
-                            bikes[bikeIndex].assembler = assembler;
-                            count++;
-                        }
-                    }
-                });
-                
-                localStorage.setItem('bikes', JSON.stringify(bikes));
-                
-                $('#assemblyModal').modal('hide');
-                loadBikeList();
-                updateDashboardCounts();
-                alert(`${count} unit sepeda berhasil ditandai sebagai sudah dirakit!`);
+                markAsAssembled();
             });
             
             // Sale form submission
             $('#sale-form').submit(function(e) {
                 e.preventDefault();
-                
-                const bikeIds = JSON.parse($('#sale-bike-ids').val());
-                const saleCount = parseInt($('#sale-count').val());
-                const saleDate = $('#sale-date').val();
-                
-                // Mark specified number of bikes as sold
-                let count = 0;
-                bikeIds.forEach(bikeId => {
-                    if (count < saleCount) {
-                        const bikeIndex = bikes.findIndex(bike => bike.id === bikeId && bike.status === 'assembled');
-                        if (bikeIndex !== -1) {
-                            bikes[bikeIndex].status = 'sold';
-                            bikes[bikeIndex].soldDate = saleDate;
-                            count++;
-                        }
-                    }
-                });
-                
-                localStorage.setItem('bikes', JSON.stringify(bikes));
-                
-                $('#saleModal').modal('hide');
-                loadBikeList();
-                updateDashboardCounts();
-                alert(`${count} unit sepeda berhasil ditandai sebagai terjual!`);
+                markAsSold();
             });
             
             // Add master data items
             $('#save-type').click(function() {
-                const newType = $('#new-type').val().trim();
-                if (newType && !masterData.types.includes(newType)) {
-                    masterData.types.push(newType);
-                    localStorage.setItem('masterData', JSON.stringify(masterData));
-                    $('#new-type').val('');
-                    loadMasterDataToForms();
-                    loadTypeList();
-                }
+                addMasterDataItem('types', $('#new-type'));
             });
             
             $('#save-size').click(function() {
-                const newSize = $('#new-size').val().trim();
-                if (newSize && !masterData.sizes.includes(newSize)) {
-                    masterData.sizes.push(newSize);
-                    localStorage.setItem('masterData', JSON.stringify(masterData));
-                    $('#new-size').val('');
-                    loadMasterDataToForms();
-                    loadSizeList();
-                }
+                addMasterDataItem('sizes', $('#new-size'));
             });
             
             $('#save-supplier').click(function() {
-                const newSupplier = $('#new-supplier').val().trim();
-                if (newSupplier && !masterData.suppliers.includes(newSupplier)) {
-                    masterData.suppliers.push(newSupplier);
-                    localStorage.setItem('masterData', JSON.stringify(masterData));
-                    $('#new-supplier').val('');
-                    loadMasterDataToForms();
-                    loadSupplierList();
-                }
+                addMasterDataItem('suppliers', $('#new-supplier'));
             });
             
             $('#save-package').click(function() {
-                const newPackage = $('#new-package').val().trim();
-                if (newPackage && !masterData.packages.includes(newPackage)) {
-                    masterData.packages.push(newPackage);
-                    localStorage.setItem('masterData', JSON.stringify(masterData));
-                    $('#new-package').val('');
-                    loadMasterDataToForms();
-                    loadPackageList();
-                }
+                addMasterDataItem('packages', $('#new-package'));
             });
             
             $('#save-assembler').click(function() {
-                const newAssembler = $('#new-assembler').val().trim();
-                if (newAssembler && !masterData.assemblers.includes(newAssembler)) {
-                    masterData.assemblers.push(newAssembler);
-                    localStorage.setItem('masterData', JSON.stringify(masterData));
-                    $('#new-assembler').val('');
-                    loadAssemblers();
-                    loadAssemblerList();
-                }
+                addMasterDataItem('assemblers', $('#new-assembler'));
             });
             
             // Quick add from bike form
             $('#add-type-btn').click(function(e) {
                 e.preventDefault();
-                $('#masterTabs .nav-link').removeClass('active');
-                $('#type-tab').addClass('active');
-                $('#masterTabsContent .tab-pane').removeClass('show active');
-                $('#type').addClass('show active');
-                
-                $('.bottom-nav .nav-item').removeClass('active');
-                $('.bottom-nav .nav-item[data-page="master-data-page"]').addClass('active');
-                $('.page').removeClass('active');
-                $('#master-data-page').addClass('active');
+                navigateToMasterTab('type-tab');
             });
             
             $('#add-size-btn').click(function(e) {
                 e.preventDefault();
-                $('#masterTabs .nav-link').removeClass('active');
-                $('#size-tab').addClass('active');
-                $('#masterTabsContent .tab-pane').removeClass('show active');
-                $('#size').addClass('show active');
-                
-                $('.bottom-nav .nav-item').removeClass('active');
-                $('.bottom-nav .nav-item[data-page="master-data-page"]').addClass('active');
-                $('.page').removeClass('active');
-                $('#master-data-page').addClass('active');
+                navigateToMasterTab('size-tab');
             });
             
             $('#add-supplier-btn').click(function(e) {
                 e.preventDefault();
-                $('#masterTabs .nav-link').removeClass('active');
-                $('#supplier-tab').addClass('active');
-                $('#masterTabsContent .tab-pane').removeClass('show active');
-                $('#supplier').addClass('show active');
-                
-                $('.bottom-nav .nav-item').removeClass('active');
-                $('.bottom-nav .nav-item[data-page="master-data-page"]').addClass('active');
-                $('.page').removeClass('active');
-                $('#master-data-page').addClass('active');
+                navigateToMasterTab('supplier-tab');
             });
             
             $('#add-package-btn').click(function(e) {
                 e.preventDefault();
-                $('#masterTabs .nav-link').removeClass('active');
-                $('#package-tab').addClass('active');
-                $('#masterTabsContent .tab-pane').removeClass('show active');
-                $('#package').addClass('show active');
-                
-                $('.bottom-nav .nav-item').removeClass('active');
-                $('.bottom-nav .nav-item[data-page="master-data-page"]').addClass('active');
-                $('.page').removeClass('active');
-                $('#master-data-page').addClass('active');
+                navigateToMasterTab('package-tab');
             });
             
             $('#add-assembler-btn').click(function(e) {
                 e.preventDefault();
-                $('#masterTabs .nav-link').removeClass('active');
-                $('#assembler-tab').addClass('active');
-                $('#masterTabsContent .tab-pane').removeClass('show active');
-                $('#assembler').addClass('show active');
-                
-                $('.bottom-nav .nav-item').removeClass('active');
-                $('.bottom-nav .nav-item[data-page="master-data-page"]').addClass('active');
-                $('.page').removeClass('active');
-                $('#master-data-page').addClass('active');
+                navigateToMasterTab('assembler-tab');
             });
             
             // Generate QR Code
             $('#bike-select').change(function() {
-                const bikeId = $(this).val();
-                if (bikeId) {
-                    const bike = bikes.find(b => b.id === bikeId);
-                    if (bike) {
-                        $('#qr-code-container').show();
-                        $('#qrcode').empty();
-                        
-                        // Generate QR Code using qrcode-generator library
-                        const qr = qrcode(0, 'M');
-                        qr.addData(bikeId);
-                        qr.make();
-                        
-                        $('#qrcode').html(qr.createImgTag(2));
-                        $('#qr-bike-name').text(bike.name);
-                        $('#qr-bike-type-size').text(`${bike.type} - ${bike.size}`);
-                        $('#qr-bike-supplier').text(`Supplier: ${bike.supplier}`);
-                        $('#qr-bike-arrival').text(`Tgl: ${formatDate(bike.arrivalDate)}`);
-                    }
-                } else {
-                    $('#qr-code-container').hide();
-                }
+                generateQRCode();
             });
             
             // Print QR Code
             $('#print-qr').click(function() {
-                const printContent = document.getElementById('printable-qr').innerHTML;
-                const originalContent = document.body.innerHTML;
-                
-                document.body.innerHTML = printContent;
-                window.print();
-                document.body.innerHTML = originalContent;
-                
-                // Reload the page to restore functionality
-                location.reload();
+                printQRCode();
             });
             
             // Download QR Code
             $('#download-qr').click(function() {
-                const img = document.querySelector('#qrcode img');
-                if (img) {
-                    const bikeName = $('#qr-bike-name').text();
-                    const link = document.createElement('a');
-                    link.download = `qr-${bikeName.replace(/\s+/g, '-')}.png`;
-                    link.href = img.src;
-                    link.click();
-                }
+                downloadQRCode();
             });
             
             // QR Code Scanning
@@ -1280,7 +1049,123 @@
             loadSupplierList();
             loadPackageList();
             loadAssemblerList();
+            
+            // Event delegation for dynamically created buttons
+            $(document).on('click', '.assemble-btn', function() {
+                const bikeIds = JSON.parse($(this).data('ids'));
+                const maxCount = $(this).data('count');
+                $('#assembly-bike-ids').val(JSON.stringify(bikeIds));
+                $('#assembly-count').val(maxCount).attr('max', maxCount);
+                $('#assembly-max-count').text(`Maksimal: ${maxCount} unit`);
+                $('#assemblyModal').modal('show');
+            });
+            
+            $(document).on('click', '.sell-btn', function() {
+                const bikeIds = JSON.parse($(this).data('ids'));
+                const maxCount = $(this).data('count');
+                $('#sale-bike-ids').val(JSON.stringify(bikeIds));
+                $('#sale-count').val(maxCount).attr('max', maxCount);
+                $('#sale-max-count').text(`Maksimal: ${maxCount} unit`);
+                $('#saleModal').modal('show');
+            });
+            
+            $(document).on('click', '.view-qr-btn', function() {
+                const bikeId = $(this).data('id');
+                navigateToQRPage(bikeId);
+            });
+            
+            $(document).on('click', '.edit-btn', function() {
+                const bikeId = $(this).data('id');
+                const bike = bikes.find(b => b.id === bikeId);
+                
+                if (bike) {
+                    $('#edit-bike-id').val(bike.id);
+                    $('#edit-bike-name').val(bike.name);
+                    $('#edit-bike-type').val(bike.type);
+                    $('#edit-bike-size').val(bike.size);
+                    $('#edit-bike-supplier').val(bike.supplier);
+                    $('#edit-bike-package').val(bike.package);
+                    $('#edit-arrival-date').val(bike.arrivalDate);
+                    
+                    $('#editBikeModal').modal('show');
+                }
+            });
         });
+        
+        // Function to initialize tabs
+        function initializeTabs() {
+            // QR Tabs
+            $('#generate-tab').click(function() {
+                $('#qrTabs .nav-link').removeClass('active');
+                $(this).addClass('active');
+                $('#qrTabsContent .tab-pane').removeClass('show active');
+                $('#generate').addClass('show active');
+            });
+            
+            $('#scan-tab').click(function() {
+                $('#qrTabs .nav-link').removeClass('active');
+                $(this).addClass('active');
+                $('#qrTabsContent .tab-pane').removeClass('show active');
+                $('#scan').addClass('show active');
+            });
+            
+            // Master Data Tabs
+            $('#type-tab').click(function() {
+                $('#masterTabs .nav-link').removeClass('active');
+                $(this).addClass('active');
+                $('#masterTabsContent .tab-pane').removeClass('show active');
+                $('#type').addClass('show active');
+            });
+            
+            $('#size-tab').click(function() {
+                $('#masterTabs .nav-link').removeClass('active');
+                $(this).addClass('active');
+                $('#masterTabsContent .tab-pane').removeClass('show active');
+                $('#size').addClass('show active');
+            });
+            
+            $('#supplier-tab').click(function() {
+                $('#masterTabs .nav-link').removeClass('active');
+                $(this).addClass('active');
+                $('#masterTabsContent .tab-pane').removeClass('show active');
+                $('#supplier').addClass('show active');
+            });
+            
+            $('#package-tab').click(function() {
+                $('#masterTabs .nav-link').removeClass('active');
+                $(this).addClass('active');
+                $('#masterTabsContent .tab-pane').removeClass('show active');
+                $('#package').addClass('show active');
+            });
+            
+            $('#assembler-tab').click(function() {
+                $('#masterTabs .nav-link').removeClass('active');
+                $(this).addClass('active');
+                $('#masterTabsContent .tab-pane').removeClass('show active');
+                $('#assembler').addClass('show active');
+            });
+        }
+        
+        // Function to navigate to page
+        function navigateToPage(pageId) {
+            $('.bottom-nav .nav-item').removeClass('active');
+            $(`.bottom-nav .nav-item[data-page="${pageId}"]`).addClass('active');
+            $('.page').removeClass('active');
+            $(`#${pageId}`).addClass('active');
+        }
+        
+        // Function to navigate to master tab
+        function navigateToMasterTab(tabId) {
+            navigateToPage('master-data-page');
+            $(`#${tabId}`).click();
+        }
+        
+        // Function to navigate to QR page with bike selected
+        function navigateToQRPage(bikeId) {
+            navigateToPage('qr-page');
+            $('#bike-select').val(bikeId).trigger('change');
+            $('#generate-tab').click();
+        }
         
         // Function to load master data to forms
         function loadMasterDataToForms() {
@@ -1317,7 +1202,7 @@
             });
         }
         
-        // Function to load bike list - FIXED VERSION
+        // Function to load bike list
         function loadBikeList(status = 'all') {
             $('#bike-list').empty();
             
@@ -1339,7 +1224,7 @@
                 );
             }
             
-            // Group bikes by model (name + type + size + supplier + package + status)
+            // Group bikes by model
             const bikeGroups = {};
             filteredBikes.forEach(bike => {
                 const key = `${bike.name}-${bike.type}-${bike.size}-${bike.supplier}-${bike.package}-${bike.status}-${bike.arrivalDate}`;
@@ -1439,61 +1324,6 @@
                     </div>
                 `);
             });
-            
-            // Add event listeners for action buttons - FIXED VERSION
-            $(document).off('click', '.assemble-btn').on('click', '.assemble-btn', function() {
-                const bikeIds = JSON.parse($(this).data('ids'));
-                const maxCount = $(this).data('count');
-                $('#assembly-bike-ids').val(JSON.stringify(bikeIds));
-                $('#assembly-count').val(maxCount).attr('max', maxCount);
-                $('#assembly-max-count').text(`Maksimal: ${maxCount} unit`);
-                $('#assemblyModal').modal('show');
-            });
-            
-            $(document).off('click', '.sell-btn').on('click', '.sell-btn', function() {
-                const bikeIds = JSON.parse($(this).data('ids'));
-                const maxCount = $(this).data('count');
-                $('#sale-bike-ids').val(JSON.stringify(bikeIds));
-                $('#sale-count').val(maxCount).attr('max', maxCount);
-                $('#sale-max-count').text(`Maksimal: ${maxCount} unit`);
-                $('#saleModal').modal('show');
-            });
-            
-            $(document).off('click', '.view-qr-btn').on('click', '.view-qr-btn', function() {
-                const bikeId = $(this).data('id');
-                
-                // Navigate to QR page
-                $('.bottom-nav .nav-item').removeClass('active');
-                $('.bottom-nav .nav-item[data-page="qr-page"]').addClass('active');
-                $('.page').removeClass('active');
-                $('#qr-page').addClass('active');
-                
-                // Select the bike in dropdown
-                $('#bike-select').val(bikeId).trigger('change');
-                
-                // Switch to generate tab
-                $('#qrTabs .nav-link').removeClass('active');
-                $('#generate-tab').addClass('active');
-                $('#qrTabsContent .tab-pane').removeClass('show active');
-                $('#generate').addClass('show active');
-            });
-            
-            $(document).off('click', '.edit-btn').on('click', '.edit-btn', function() {
-                const bikeId = $(this).data('id');
-                const bike = bikes.find(b => b.id === bikeId);
-                
-                if (bike) {
-                    $('#edit-bike-id').val(bike.id);
-                    $('#edit-bike-name').val(bike.name);
-                    $('#edit-bike-type').val(bike.type);
-                    $('#edit-bike-size').val(bike.size);
-                    $('#edit-bike-supplier').val(bike.supplier);
-                    $('#edit-bike-package').val(bike.package);
-                    $('#edit-arrival-date').val(bike.arrivalDate);
-                    
-                    $('#editBikeModal').modal('show');
-                }
-            });
         }
         
         // Function to update dashboard counts
@@ -1501,7 +1331,6 @@
             const unassembledCount = bikes.filter(bike => bike.status === 'unassembled').length;
             const assembledCount = bikes.filter(bike => bike.status === 'assembled').length;
             const lowStockCount = bikes.filter(bike => {
-                // Count bikes that have 2 or less units of the same model
                 const sameModelBikes = bikes.filter(b => 
                     b.name === bike.name && 
                     b.type === bike.type && 
@@ -1524,6 +1353,209 @@
                     ` (Unit ${bike.unitNumber}/${bike.totalUnits})` : '';
                 $('#bike-select').append(`<option value="${bike.id}">${bike.name}${unitInfo}</option>`);
             });
+        }
+        
+        // Function to add new bike
+        function addNewBike() {
+            const unitsPerPackage = parseInt($('#units-per-package').val());
+            const packageQuantity = parseInt($('#package-quantity').val());
+            const totalUnits = unitsPerPackage * packageQuantity;
+            const bikeImage = $('#image-preview').attr('src') || '';
+            const today = new Date().toISOString().split('T')[0];
+            
+            // Create multiple bike entries based on total units
+            for (let i = 0; i < totalUnits; i++) {
+                const bikeData = {
+                    id: Date.now().toString() + '-' + i,
+                    name: $('#bike-name').val().toUpperCase(),
+                    type: $('#bike-type').val(),
+                    size: $('#bike-size').val(),
+                    supplier: $('#bike-supplier').val(),
+                    package: $('#bike-package').val(),
+                    unitsPerPackage: unitsPerPackage,
+                    packageQuantity: packageQuantity,
+                    unitNumber: i + 1,
+                    totalUnits: totalUnits,
+                    arrivalDate: $('#arrival-date').val(),
+                    assemblyDate: null,
+                    soldDate: null,
+                    status: 'unassembled',
+                    image: bikeImage,
+                    assembler: null
+                };
+                
+                bikes.push(bikeData);
+            }
+            
+            localStorage.setItem('bikes', JSON.stringify(bikes));
+            
+            // Reset form
+            $('#bike-form')[0].reset();
+            $('#units-per-package').val(1);
+            $('#package-quantity').val(1);
+            $('#image-preview').hide();
+            $('#image-placeholder').show();
+            $('#arrival-date').val(today);
+            
+            // Show success message
+            alert(`Berhasil menambahkan ${totalUnits} unit sepeda!`);
+            
+            // Update UI
+            loadBikeList();
+            updateDashboardCounts();
+            loadBikeSelect();
+            
+            // Navigate to dashboard
+            navigateToPage('dashboard-page');
+        }
+        
+        // Function to update bike
+        function updateBike() {
+            const bikeId = $('#edit-bike-id').val();
+            const bikeIndex = bikes.findIndex(bike => bike.id === bikeId);
+            
+            if (bikeIndex !== -1) {
+                bikes[bikeIndex].name = $('#edit-bike-name').val().toUpperCase();
+                bikes[bikeIndex].type = $('#edit-bike-type').val();
+                bikes[bikeIndex].size = $('#edit-bike-size').val();
+                bikes[bikeIndex].supplier = $('#edit-bike-supplier').val();
+                bikes[bikeIndex].package = $('#edit-bike-package').val();
+                bikes[bikeIndex].arrivalDate = $('#edit-arrival-date').val();
+                
+                localStorage.setItem('bikes', JSON.stringify(bikes));
+                
+                $('#editBikeModal').modal('hide');
+                loadBikeList();
+                loadBikeSelect();
+                alert('Data sepeda berhasil diupdate!');
+            }
+        }
+        
+        // Function to mark as assembled
+        function markAsAssembled() {
+            const bikeIds = JSON.parse($('#assembly-bike-ids').val());
+            const assemblyCount = parseInt($('#assembly-count').val());
+            const assemblyDate = $('#assembly-date').val();
+            const assembler = $('#assembler').val();
+            
+            // Mark specified number of bikes as assembled
+            let count = 0;
+            bikeIds.forEach(bikeId => {
+                if (count < assemblyCount) {
+                    const bikeIndex = bikes.findIndex(bike => bike.id === bikeId && bike.status === 'unassembled');
+                    if (bikeIndex !== -1) {
+                        bikes[bikeIndex].status = 'assembled';
+                        bikes[bikeIndex].assemblyDate = assemblyDate;
+                        bikes[bikeIndex].assembler = assembler;
+                        count++;
+                    }
+                }
+            });
+            
+            localStorage.setItem('bikes', JSON.stringify(bikes));
+            
+            $('#assemblyModal').modal('hide');
+            loadBikeList();
+            updateDashboardCounts();
+            alert(`${count} unit sepeda berhasil ditandai sebagai sudah dirakit!`);
+        }
+        
+        // Function to mark as sold
+        function markAsSold() {
+            const bikeIds = JSON.parse($('#sale-bike-ids').val());
+            const saleCount = parseInt($('#sale-count').val());
+            const saleDate = $('#sale-date').val();
+            
+            // Mark specified number of bikes as sold
+            let count = 0;
+            bikeIds.forEach(bikeId => {
+                if (count < saleCount) {
+                    const bikeIndex = bikes.findIndex(bike => bike.id === bikeId && bike.status === 'assembled');
+                    if (bikeIndex !== -1) {
+                        bikes[bikeIndex].status = 'sold';
+                        bikes[bikeIndex].soldDate = saleDate;
+                        count++;
+                    }
+                }
+            });
+            
+            localStorage.setItem('bikes', JSON.stringify(bikes));
+            
+            $('#saleModal').modal('hide');
+            loadBikeList();
+            updateDashboardCounts();
+            alert(`${count} unit sepeda berhasil ditandai sebagai terjual!`);
+        }
+        
+        // Function to add master data item
+        function addMasterDataItem(type, inputElement) {
+            const newItem = inputElement.val().trim();
+            if (newItem && !masterData[type].includes(newItem)) {
+                masterData[type].push(newItem);
+                localStorage.setItem('masterData', JSON.stringify(masterData));
+                inputElement.val('');
+                loadMasterDataToForms();
+                
+                // Reload the specific list
+                if (type === 'types') loadTypeList();
+                else if (type === 'sizes') loadSizeList();
+                else if (type === 'suppliers') loadSupplierList();
+                else if (type === 'packages') loadPackageList();
+                else if (type === 'assemblers') {
+                    loadAssemblers();
+                    loadAssemblerList();
+                }
+            }
+        }
+        
+        // Function to generate QR code
+        function generateQRCode() {
+            const bikeId = $('#bike-select').val();
+            if (bikeId) {
+                const bike = bikes.find(b => b.id === bikeId);
+                if (bike) {
+                    $('#qr-code-container').show();
+                    $('#qrcode').empty();
+                    
+                    // Generate QR Code using qrcode-generator library
+                    const qr = qrcode(0, 'M');
+                    qr.addData(bikeId);
+                    qr.make();
+                    
+                    $('#qrcode').html(qr.createImgTag(2));
+                    $('#qr-bike-name').text(bike.name);
+                    $('#qr-bike-type-size').text(`${bike.type} - ${bike.size}`);
+                    $('#qr-bike-supplier').text(`Supplier: ${bike.supplier}`);
+                    $('#qr-bike-arrival').text(`Tgl: ${formatDate(bike.arrivalDate)}`);
+                }
+            } else {
+                $('#qr-code-container').hide();
+            }
+        }
+        
+        // Function to print QR code
+        function printQRCode() {
+            const printContent = document.getElementById('printable-qr').innerHTML;
+            const originalContent = document.body.innerHTML;
+            
+            document.body.innerHTML = printContent;
+            window.print();
+            document.body.innerHTML = originalContent;
+            
+            // Reload the page to restore functionality
+            location.reload();
+        }
+        
+        // Function to download QR code
+        function downloadQRCode() {
+            const img = document.querySelector('#qrcode img');
+            if (img) {
+                const bikeName = $('#qr-bike-name').text();
+                const link = document.createElement('a');
+                link.download = `qr-${bikeName.replace(/\s+/g, '-')}.png`;
+                link.href = img.src;
+                link.click();
+            }
         }
         
         // Function to start modal camera scan
