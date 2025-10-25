@@ -76,6 +76,7 @@
             text-align: center;
             padding: 10px 0;
             flex: 1;
+            cursor: pointer;
         }
         
         .nav-item.active {
@@ -243,6 +244,7 @@
             align-items: center;
             justify-content: center;
             font-size: 1.5rem;
+            cursor: pointer;
         }
         
         .search-box {
@@ -306,6 +308,27 @@
         .action-buttons .btn {
             flex: 1;
             min-width: 120px;
+        }
+        
+        /* Custom tab styling untuk memastikan konsistensi */
+        .nav-tabs .nav-link {
+            color: #495057;
+            cursor: pointer;
+        }
+        
+        .nav-tabs .nav-link.active {
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+        
+        .nav-pills .nav-link {
+            color: #495057;
+            cursor: pointer;
+        }
+        
+        .nav-pills .nav-link.active {
+            background-color: var(--primary-color);
+            color: white;
         }
     </style>
 </head>
@@ -425,7 +448,7 @@
                         <input type="hidden" id="edit-bike-id">
                         <div class="mb-3">
                             <label for="edit-bike-name" class="form-label">Nama Sepeda</label>
-                            <input type="text" class="form-control" id="edit-bike-name" required>
+                            <input type="text" class="form-control" id="edit-bike-name" required style="text-transform: uppercase;">
                         </div>
                         <div class="mb-3">
                             <label for="edit-bike-type" class="form-label">Tipe</label>
@@ -814,25 +837,33 @@
             loadBikeSelect();
             loadAssemblers();
             
-            // Initialize tabs properly
-            $('#qrTabs .nav-link').on('shown.bs.tab', function (e) {
-                const target = $(e.target).attr("data-bs-target");
-                $(target).addClass('show active');
-            });
-            
-            $('#masterTabs .nav-link').on('shown.bs.tab', function (e) {
-                const target = $(e.target).attr("data-bs-target");
-                $(target).addClass('show active');
-            });
-            
-            // Navigation
-            $('.nav-item').click(function() {
-                $('.nav-item').removeClass('active');
+            // Navigation - Fixed version
+            $('.bottom-nav .nav-item').click(function() {
+                $('.bottom-nav .nav-item').removeClass('active');
                 $(this).addClass('active');
                 
                 const pageId = $(this).data('page');
                 $('.page').removeClass('active');
                 $('#' + pageId).addClass('active');
+            });
+            
+            // Initialize Bootstrap tabs dengan event handler yang benar
+            $('#qrTabs .nav-link').click(function(e) {
+                e.preventDefault();
+                const target = $(this).data('bs-target');
+                $('#qrTabs .nav-link').removeClass('active');
+                $(this).addClass('active');
+                $('#qrTabsContent .tab-pane').removeClass('show active');
+                $(target).addClass('show active');
+            });
+            
+            $('#masterTabs .nav-link').click(function(e) {
+                e.preventDefault();
+                const target = $(this).data('bs-target');
+                $('#masterTabs .nav-link').removeClass('active');
+                $(this).addClass('active');
+                $('#masterTabsContent .tab-pane').removeClass('show active');
+                $(target).addClass('show active');
             });
             
             // Filter bikes by status
@@ -923,8 +954,8 @@
                 loadBikeSelect();
                 
                 // Navigate to dashboard
-                $('.nav-item').removeClass('active');
-                $('.nav-item[data-page="dashboard-page"]').addClass('active');
+                $('.bottom-nav .nav-item').removeClass('active');
+                $('.bottom-nav .nav-item[data-page="dashboard-page"]').addClass('active');
                 $('.page').removeClass('active');
                 $('#dashboard-page').addClass('active');
             });
@@ -1077,8 +1108,8 @@
                 $('#masterTabsContent .tab-pane').removeClass('show active');
                 $('#type').addClass('show active');
                 
-                $('.nav-item').removeClass('active');
-                $('.nav-item[data-page="master-data-page"]').addClass('active');
+                $('.bottom-nav .nav-item').removeClass('active');
+                $('.bottom-nav .nav-item[data-page="master-data-page"]').addClass('active');
                 $('.page').removeClass('active');
                 $('#master-data-page').addClass('active');
             });
@@ -1090,8 +1121,8 @@
                 $('#masterTabsContent .tab-pane').removeClass('show active');
                 $('#size').addClass('show active');
                 
-                $('.nav-item').removeClass('active');
-                $('.nav-item[data-page="master-data-page"]').addClass('active');
+                $('.bottom-nav .nav-item').removeClass('active');
+                $('.bottom-nav .nav-item[data-page="master-data-page"]').addClass('active');
                 $('.page').removeClass('active');
                 $('#master-data-page').addClass('active');
             });
@@ -1103,8 +1134,8 @@
                 $('#masterTabsContent .tab-pane').removeClass('show active');
                 $('#supplier').addClass('show active');
                 
-                $('.nav-item').removeClass('active');
-                $('.nav-item[data-page="master-data-page"]').addClass('active');
+                $('.bottom-nav .nav-item').removeClass('active');
+                $('.bottom-nav .nav-item[data-page="master-data-page"]').addClass('active');
                 $('.page').removeClass('active');
                 $('#master-data-page').addClass('active');
             });
@@ -1116,8 +1147,8 @@
                 $('#masterTabsContent .tab-pane').removeClass('show active');
                 $('#package').addClass('show active');
                 
-                $('.nav-item').removeClass('active');
-                $('.nav-item[data-page="master-data-page"]').addClass('active');
+                $('.bottom-nav .nav-item').removeClass('active');
+                $('.bottom-nav .nav-item[data-page="master-data-page"]').addClass('active');
                 $('.page').removeClass('active');
                 $('#master-data-page').addClass('active');
             });
@@ -1129,8 +1160,8 @@
                 $('#masterTabsContent .tab-pane').removeClass('show active');
                 $('#assembler').addClass('show active');
                 
-                $('.nav-item').removeClass('active');
-                $('.nav-item[data-page="master-data-page"]').addClass('active');
+                $('.bottom-nav .nav-item').removeClass('active');
+                $('.bottom-nav .nav-item[data-page="master-data-page"]').addClass('active');
                 $('.page').removeClass('active');
                 $('#master-data-page').addClass('active');
             });
@@ -1286,7 +1317,7 @@
             });
         }
         
-        // Function to load bike list
+        // Function to load bike list - FIXED VERSION
         function loadBikeList(status = 'all') {
             $('#bike-list').empty();
             
@@ -1409,8 +1440,8 @@
                 `);
             });
             
-            // Add event listeners for action buttons
-            $('.assemble-btn').click(function() {
+            // Add event listeners for action buttons - FIXED VERSION
+            $(document).off('click', '.assemble-btn').on('click', '.assemble-btn', function() {
                 const bikeIds = JSON.parse($(this).data('ids'));
                 const maxCount = $(this).data('count');
                 $('#assembly-bike-ids').val(JSON.stringify(bikeIds));
@@ -1419,7 +1450,7 @@
                 $('#assemblyModal').modal('show');
             });
             
-            $('.sell-btn').click(function() {
+            $(document).off('click', '.sell-btn').on('click', '.sell-btn', function() {
                 const bikeIds = JSON.parse($(this).data('ids'));
                 const maxCount = $(this).data('count');
                 $('#sale-bike-ids').val(JSON.stringify(bikeIds));
@@ -1428,12 +1459,12 @@
                 $('#saleModal').modal('show');
             });
             
-            $('.view-qr-btn').click(function() {
+            $(document).off('click', '.view-qr-btn').on('click', '.view-qr-btn', function() {
                 const bikeId = $(this).data('id');
                 
                 // Navigate to QR page
-                $('.nav-item').removeClass('active');
-                $('.nav-item[data-page="qr-page"]').addClass('active');
+                $('.bottom-nav .nav-item').removeClass('active');
+                $('.bottom-nav .nav-item[data-page="qr-page"]').addClass('active');
                 $('.page').removeClass('active');
                 $('#qr-page').addClass('active');
                 
@@ -1447,7 +1478,7 @@
                 $('#generate').addClass('show active');
             });
             
-            $('.edit-btn').click(function() {
+            $(document).off('click', '.edit-btn').on('click', '.edit-btn', function() {
                 const bikeId = $(this).data('id');
                 const bike = bikes.find(b => b.id === bikeId);
                 
@@ -1856,4 +1887,4 @@
         }
     </script>
 </body>
-                        </html>
+</html>
